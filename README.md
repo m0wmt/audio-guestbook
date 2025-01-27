@@ -21,8 +21,8 @@ Use an old rotary telephone and a Teensy 4.1 development board to record message
 
 ## Parts List
 - Rotary phone
-- Teensy 4.1 [development board] (https://www.pjrc.com/teensy/pinout.html)
-- Teensy 4.0 [audio board] (https://www.pjrc.com/store/teensy3_audio.html)
+- Teensy 4.1 [development board](https://www.pjrc.com/teensy/pinout.html)
+- Teensy 4.0 [audio board](https://www.pjrc.com/store/teensy3_audio.html)
 - SD card (7.2Gb for 24hrs @ 44.1kHz)
 - LED light(s)
 - Switch
