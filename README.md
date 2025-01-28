@@ -15,9 +15,10 @@ Use an old rotary telephone and a Teensy 4.1 development board to record message
 - Play recorded message to tell user 'to leave their message after the beep'
 - Get recorded message(s) from customer (start recording, exceeding time limit, and contact support)
 - Button to replay last message
-- Save recorded messages as .wav files to SD card
+- Save recorded messages as .wav files to micro SD card
 - Indicate how many messages have been recorded (to be defined)
 - Power recorder by USB phone charger or battery
+- Web page showing status (number of recordings, disk usage etc.) to support user; this would be on an ESP32 via Serial, SPI, I2C or UART
 
 ## Parts List
 - Rotary telephone
