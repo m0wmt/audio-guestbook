@@ -18,12 +18,34 @@ Use an old rotary telephone and a Teensy 4.1 development board to record message
 - Save recorded messages as .wav files to micro SD card
 - Indicate how many messages have been recorded (to be defined)
 - Power recorder by USB phone charger or battery
-- Web page showing status (number of recordings, disk usage etc.) to support user; this would be on an ESP32 via Serial, SPI, I2C or UART
+- Web page showing status (number of recordings, disk usage etc.) to support user; this would be on an ESP32 via Serial/UART
 
 ## Parts List
 - Rotary telephone
 - Teensy 4.1 [development board](https://www.pjrc.com/teensy/pinout.html)
 - Teensy 4.0 [audio board](https://www.pjrc.com/store/teensy3_audio.html)
-- SD card (7.2Gb for 24hrs @ 44.1kHz)
+- Mico SD card (7.2Gb for 24hrs @ 44.1kHz)
 - LED light(s)
 - Switch
+- ESP32-S3 Mini
+
+<figure>
+  <img
+  src="./images/teensy4-1.jpeg "
+  alt="Teensy 4.1 Development Board">
+  <figcaption>Teensy 4.1</figcaption>
+</figure>
+
+<figure>
+  <img
+  src="./images/teensy-audio.jpeg "
+  alt="Teensy Audio Board">
+  <figcaption>Teensy Audio Board 4.0</figcaption>
+</figure>
+
+<figure>
+  <img
+  src="./images/esp32-s3-mini.jpeg "
+  alt="ESP32-S3 Mini Development Board">
+  <figcaption>ESP32-S3 Mini</figcaption>
+</figure>
