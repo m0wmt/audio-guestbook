@@ -21,7 +21,7 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
 - Web page showing status (number of recordings, disk usage etc.) to support user. This will utilize an ESP32 with a Wi-Fi access point, with messages sent via Serial/UART from the Teensy to the ESP32 for displaying.
 
 ## Parts List
-- Rotary telephone
+- Rotary telephone [how to dismantle GPO No. 706 Rotary Phone](https://www.britishtelephones.com/t706dismantle.htm)
 - Teensy 4.1 [development board](https://www.pjrc.com/teensy/pinout.html)
 - Teensy 4.0 [audio board](https://www.pjrc.com/store/teensy3_audio.html)
 - Mico SD card (7.2Gb for 24hrs @ 44.1kHz)
@@ -31,21 +31,28 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
 
 <figure>
   <img
-  src="./images/teensy4-1.jpeg "
+  src="./images/teensy4-1.jpeg"
   alt="Teensy 4.1 Development Board">
   <figcaption>Teensy 4.1</figcaption>
 </figure>
 
 <figure>
   <img
-  src="./images/teensy-audio.jpeg "
+  src="./images/teensy-audio.jpeg"
   alt="Teensy 4.0 Audio Board">
   <figcaption>Teensy Audio Board 4.0</figcaption>
 </figure>
 
 <figure>
   <img
-  src="./images/esp32-s3-mini.jpeg "
+  src="./images/esp32-s3-mini.jpeg"
   alt="ESP32-S3 Mini Development Board">
   <figcaption>ESP32-S3 Mini</figcaption>
+</figure>
+
+<figure>
+  <img
+  src="./images/phone.png"
+  alt="GPO No. 706 Rotary Phone">
+  <figcaption>GPO No. 706 Rotary Phone</figcaption>
 </figure>
