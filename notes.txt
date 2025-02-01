@@ -1,0 +1,65 @@
+Various notes/useful links from research.
+
+Audio guestbook thread: https://forum.pjrc.com/index.php?threads/teensy-4-0-based-audio-guestbook.70553/
+
+Free RAM: https://forum.pjrc.com/index.php?threads/how-to-display-free-ram.33443/
+
+Teensy Wiki: https://github-wiki-see.page/m/TeensyUser/doc/wiki_index
+
+Memory mapping: https://github-wiki-see.page/m/TeensyUser/doc/wiki/Memory-Mapping
+
+Port mapping: https://github-wiki-see.page/m/TeensyUser/doc/wiki/Mapping-Pins-to-Ports
+
+Teensy Forum:
+    https://forum.pjrc.com/index.php#main-category.1
+    Audio: https://forum.pjrc.com/index.php?threads/teensy-4-0-audio-shield-show-sd-card-as-mass-storage-when-connected-as-usb-device.70433/
+    UART between Teensy and ESP32: https://forum.pjrc.com/index.php?threads/communicating-between-teensy-4-1-and-firebeetle-esp-32e-using-uart.74684/
+    Audio projects: https://forum.pjrc.com/index.php?forums/audio-projects.8/
+    Audio guestbook thread: https://forum.pjrc.com/index.php?forums/audio-projects.8/
+	
+Not compiling issue: https://community.platformio.org/t/teensy-4-0-not-compiling-on-raspberry-pi-bits-c-config-h-no-such-file-or-directory/15592
+
+Teensy example: https://github.com/nickrehm/dRehmFlight/blob/master/Versions/dRehmFlight_Teensy_BETA_1.3/dRehmFlight_Teensy_BETA_1.3.ino
+
+UART between Teensy and ESP32: https://forum.pjrc.com/index.php?threads/communicating-between-teensy-4-1-and-firebeetle-esp-32e-using-uart.74684/
+
+Possible web page app part: https://github.com/rjwats/esp8266-react
+
+ESP32 access point/web server: https://randomnerdtutorials.com/esp32-access-point-ap-web-server/
+
+Issues with original:
+    MTP: https://github.com/playfultechnology/audio-guestbook/issues/147
+    SD card not detected: https://github.com/playfultechnology/audio-guestbook/issues/116
+
+
+How to detect rotary dial being used.
+    https://www.instructables.com/How-to-turn-an-old-school-rotary-phone-into-an-inp/
+
+    iRotary project: 
+    https://www.stavros.io/posts/irotary-saga/ - https://github.com/skorokithakis/iRotary/blob/master/src/sketch.ino
+
+Code examples
+--------
+## Free RAM
+extern unsigned long _heap_start;
+extern unsigned long _heap_end;
+extern char *__brkval;
+
+int freeram() {
+  return (char *)&_heap_end - __brkval;
+}
+
+
+void setup() {
+  while (!Serial) ;
+  Serial.print("freeram = ");
+  Serial.println(freeram());
+  volatile char *p = (char *)malloc(152000);
+  *p = 0;
+  Serial.print("freeram = ");
+  Serial.println(freeram());
+}
+
+void loop() {
+}
+---------
