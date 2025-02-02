@@ -16,26 +16,22 @@
 
 // GLOBALS
 
-/* Variables to obtain free RAM */
-extern unsigned long _heap_start;
-extern unsigned long _heap_end;
-extern char *__brkval;
-
-AudioPlaySdWav           playWav1;
-AudioOutputI2S           audioOutput;
+// All audio should be WAV files (44.1kHz 16-bit PCM)
+AudioPlaySdWav           playWav1;      
+AudioOutputI2S           audioOutput;   // I2S interface to Speaker/Line Out on Teensy 4.0 Audio shield
 AudioConnection          patchCord1(playWav1, 0, audioOutput, 0);
 AudioConnection          patchCord2(playWav1, 1, audioOutput, 1);
 AudioControlSGTL5000     sgtl5000_1;
+AudioSynthWaveform       waveform1;     // To create the "beep" sfx
 
-// Use Teensy 4.1 SD card
+// Use Teensy 4.1 SD card, teensy forum thinks it is faster than the audio board SD card interface.
 #define SDCARD_CS_PIN    BUILTIN_SDCARD
-#define SDCARD_MOSI_PIN  11  // not actually used
-#define SDCARD_SCK_PIN   13  // not actually used
+#define SDCARD_MOSI_PIN  11
+#define SDCARD_SCK_PIN   13
 
 
 
 /* Function prototypes */
-static int free_ram(void);
 static void play_file(const char *filename);
 
 /**
@@ -46,17 +42,16 @@ void setup() {
     // Wait for serial to start!
     } 
 
-    Serial.print("Free RAM = ");
-    Serial.println(free_ram());
-
     Serial.println("Setting up audio and SD card");
-    // Audio connections require memory to work.  For more
-    // detailed information, see the MemoryAndCpuUsage example
+
+    // Reset the maximum reported by AudioMemoryUsageMax
+    AudioMemoryUsageMaxReset();
+
+    // Audio connections require memory to work. The numberBlocks input specifies how much memory 
+    // to reserve for audio data. Each block holds 128 audio samples, or approx 2.9 ms of sound. 
     AudioMemory(8);
 
     // Comment these out if not using the audio adaptor board.
-    // This may wait forever if the SDA & SCL pins lack
-    // pullup resistors
     sgtl5000_1.enable();
     sgtl5000_1.volume(0.5);
 
@@ -70,16 +65,21 @@ void setup() {
         }
     }
 
+    // filenames are always uppercase 8.3 format
     Serial.println("Starting to play example .wav files");
-    play_file("SDTEST1.WAV");  // filenames are always uppercase 8.3 format
-    delay(500);
-    play_file("SDTEST2.WAV");
-    delay(500);
+    //play_file("SDTEST1.WAV");  
+    //delay(500);
+    //play_file("SDTEST2.WAV");
+    //delay(500);
     play_file("SDTEST3.WAV");
     delay(500);
-    play_file("SDTEST4.WAV");
-    delay(1500);  
+    // play_file("SDTEST4.WAV");
+    // delay(1500);  
     Serial.println("Example .wav files finished playing");
+
+    // Get the maximum number of blocks that have ever been used
+    Serial.print("Max number of blocks used by Audio were: ");
+    Serial.println(AudioMemoryUsageMax());
 }  
 
 /**
@@ -88,15 +88,6 @@ void setup() {
 void loop() {
 }
 
-
-/**
- * @brief Obtain free RAM
- * 
- * @returns Available RAM
- */
-static int free_ram(void) {
-    return (char *)&_heap_end - __brkval;
-}
 
 /**
  * @brief Play audio .wav file
