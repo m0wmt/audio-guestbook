@@ -56,3 +56,13 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
   alt="GPO No. 706 Rotary Phone">
   <figcaption>GPO No. 706 Rotary Phone</figcaption>
 </figure>
+
+<figure>
+  <img
+  src="./images/connections.jpeg"
+  alt="Phone terminal connections">
+  <figcaption>Phone terminal connections</figcaption>
+</figure>
+
+## Wiring
+Audio board connected to Teensy through corresponding pins.  Handset lever, GND to terminal 5 (T5) on the handset, +VE to T17 on the handset. PRESS button, GND to T13, +VE to T12.
