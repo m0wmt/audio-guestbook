@@ -16,6 +16,9 @@ Set up the development environment (linux development mini PC), using VSCode and
 
 ### February
 
+Rotary Telephone:
+![Rotary Telephone](./images/phone.png)
+
 Won an eBay auction for a GPO No. 760 rotary telephone. In very good condition, rotary dial works perfectly bringing back nostalgic memories and it has an additional PRESS button.
 
 Started writing test code to confirm soldering was okay and that we can access the SD card on the Teensy (main board) and play WAV files via the audio board, all working as expected.
