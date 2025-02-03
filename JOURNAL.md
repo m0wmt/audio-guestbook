@@ -22,10 +22,13 @@ Started writing test code to confirm soldering was okay and that we can access t
 
 Took the phone to pieces; removed the two screws on the top where the handset rests and pulled the top off.  Identified all the wires; microphone, speaker, handset rocker switch, and the PRESS button switch.
 
-> Speaker: 			Green -> 2 (-ve GND) 		Red -> 1 (+ve TIP)
-> Microphone: 		Blue -> 13 (-ve GND) 		White -> 10 (+ve MIC)
-> Handset Switch: 	5 (-ve GND)				17 (+ve)
-> PRESS Button: 	Brown -> 13 (-ve GND)	 	Blue -> 12 (+ve)
+> Speaker: 			Green == 2 (-ve GND) 		Red == 1 (+ve TIP)
+> Microphone: 		Blue == 13 (-ve GND) 		White == 10 (+ve MIC)
+> Handset Switch: 	5 (-ve GND)				   17 (+ve)
+> PRESS Button: 	Brown == 13 (-ve GND)	 	Blue == 12 (+ve)
+
+Phone speaker connected to Teensy Audio Board:
+![Speaker connected to Teensy](./images/speaker-connected.jpeg)
 
 Found a spare 3.5mm headphone, stripped it of it’s existing wiring and re-wired with 2 wires, one at the tip (red/+ve) and one on the sleeve (green/GND). Plugged it in to the audio board headphone socket and tested, can now hear music from the telephone handset via code.
 
