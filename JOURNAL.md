@@ -22,11 +22,16 @@ Started writing test code to confirm soldering was okay and that we can access t
 
 Took the phone to pieces; removed the two screws on the top where the handset rests and pulled the top off.  Identified all the wires; microphone, speaker, handset rocker switch, and the PRESS button switch.
 
-> Speaker: 			Green -> 2 (-ve GND) 		Red -> 1 (+ve TIP) Microphone: 		Blue -> 13 (-ve GND) 		White -> 10 (+ve MIC) Handset Switch: 	5 (-ve GND)				17 (+ve) PRESS Button: 	Brown -> 13 (-ve GND)	 	Blue -> 12 (+ve)
+> Speaker: 			Green -> 2 (-ve GND) 		Red -> 1 (+ve TIP)
+> Microphone: 		Blue -> 13 (-ve GND) 		White -> 10 (+ve MIC)
+> Handset Switch: 	5 (-ve GND)				17 (+ve)
+> PRESS Button: 	Brown -> 13 (-ve GND)	 	Blue -> 12 (+ve)
 
 Found a spare 3.5mm headphone, stripped it of it’s existing wiring and re-wired with 2 wires, one at the tip (red/+ve) and one on the sleeve (green/GND). Plugged it in to the audio board headphone socket and tested, can now hear music from the telephone handset via code.
 
-![Phone connections](./images/connections.jpeg "Phone connection panel")
+Phone connection panel
+![Phone connections](./images/connections.jpeg)
+
 Identified and tested the handset switch and PRESS button actions.  Can now detect PRESS button being pressed/released and handset rocker switch when the handset is lifted/put back down. Using pins 33 and 34 on the Teensy for the two switches, 33 for the handset and 34 for the PRESS button.
 Wiring of the telephone; Handset lever, Teensy GND to terminal 5 (T5) on the handset, +VE (Teensy pin 33) to T17 on the handset. PRESS button, Teensy GND to T13, +VE to (Teensy pin 34) T12.
 
