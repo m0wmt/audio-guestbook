@@ -29,9 +29,7 @@ Took the phone to pieces; removed the two screws on the top where the handset re
 
 Found a spare 3.5mm headphone, stripped it of it’s existing wiring and re-wired with 2 wires, one at the tip (red/+ve) and one on the sleeve (green/GND). Plugged it in to the audio board headphone socket and tested, can now hear music from the telephone handset via code.
 
-Phone 
-connection 
-panel
+Phone connection panel:
 ![Phone connections](./images/connections.jpeg)
 
 Identified and tested the handset switch and PRESS button actions.  Can now detect PRESS button being pressed/released and handset rocker switch when the handset is lifted/put back down. Using pins 33 and 34 on the Teensy for the two switches, 33 for the handset and 34 for the PRESS button.
