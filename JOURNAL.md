@@ -27,10 +27,12 @@ Took the phone to pieces; removed the two screws on the top where the handset re
 > Handset Switch: 	5 (-ve GND)				   17 (+ve)
 > PRESS Button: 	Brown == 13 (-ve GND)	 	Blue == 12 (+ve)
 
+
 Phone speaker connected to Teensy Audio Board:
 ![Speaker connected to Teensy](./images/speaker-connected.jpeg)
 
 Found a spare 3.5mm headphone, stripped it of it’s existing wiring and re-wired with 2 wires, one at the tip (red/+ve) and one on the sleeve (green/GND). Plugged it in to the audio board headphone socket and tested, can now hear music from the telephone handset via code.
+
 
 Phone connection panel:
 ![Phone connections](./images/connections.jpeg)
