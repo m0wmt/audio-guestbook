@@ -56,7 +56,7 @@ void setup() {
 }
 ```
 
-Connected a new 3.3v button battery to the RTC ([VBAT + GND](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) next to the SD card on the Teeny) today (7th Feb) and wrote a test program to set and read the RTC.  All seems to work, will leave the battery connected and on and test to see how long it lasts.
+Connected a new 3.3v button battery to the RTC ([VBAT + GND](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) next to the SD card on the Teeny) today (7th Feb) and wrote a test program to set and read the RTC.  All seems to work, will leave the battery connected and test to see how long it lasts, according to the [PRJC Teensy forum](https://forum.pjrc.com/index.php) about 1-2 months for the Teensy 4.
 
 Todo: 
 * Play sound when program starts up.
