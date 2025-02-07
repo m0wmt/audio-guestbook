@@ -65,6 +65,6 @@ Development Tasks:
 * Record message via handset speaker.  Need to wait for right angle connectors to arrive before doing the MIC, only way to test that will be to speak in to it!
 * Play sound when program starts up.
 * Play message to user to record after the beep.
-* Download Audacity to the PC for recording WAV files and playing them back. Download but not yet used.
+* Download Audacity to the PC for recording WAV files and playing them back. Downloaded but not yet used.
 * Program logic of handset/PRESS button.
 * Can we use the telephone dial to carry out actions?
