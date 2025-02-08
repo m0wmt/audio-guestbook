@@ -63,3 +63,109 @@ void setup() {
 void loop() {
 }
 ---------
+	case Mode::Prompting:
+      // Wait for users to put the handset to their ear
+      wait_start = millis();
+      mode = Mode::WaitHandsetEar;
+      break;
+   
+    case Mode::WaitHandsetEar:
+      // should check for button changes here, and every case
+      if (millis() - wait_start > 1000) // give them a second
+      {
+        // Play the greeting inviting them to record their message
+        playWav1.play("greeting.wav"); 
+        mode = Mode::WaitGreetingStart;
+      }
+      break;
+   
+    case Mode::WaitGreetingStart:
+      if (playWav1.isPlaying()) // WAV file has started playing
+      {
+        mode = Mode::GreetingIsPlaying;
+      }
+      break;
+   
+   
+    case Mode::GreetingIsPlaying:
+      // Wait for greeting to end OR handset to be replaced
+      if (playWav1.isPlaying()) // still playing
+      {
+        // Check whether the handset is replaced
+        buttonRecord.update();
+        if(buttonRecord.fallingEdge())
+        {
+          // Handset is replaced
+          playWav1.stop();
+          mode = Mode::Ready;
+          // return; // NO NO NO!
+        }
+      }
+      else
+      {
+        waveform1.frequency(440);
+        waveform1.amplitude(0.9);
+        wait_start = millis();
+        mode = Mode::PlayingGreetingBeep;
+      }
+      break;
+   
+    case Mode::PlayingGreetingBeep:
+      if (millis() - wait_start > 250) // 250ms beep
+      {
+          // beep is done, stop it
+          waveform1.amplitude(0);
+          // Start the recording function
+          startRecording();
+      }
+      break;
+-------
+Beeps
+
+
+void end_Beep(void) {
+	waveform1.frequency(523.25);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+	wait(250);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+	wait(250);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+	wait(250);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+}
+
+void two_tone_Beep(void) {
+	waveform1.frequency(523.25);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+	waveform1.frequency(375.0);
+	wait(250);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+	waveform1.frequency(523.25);
+	wait(250);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+	waveform1.frequency(375.0);
+	wait(250);
+	waveform1.amplitude(beep_volume);
+	wait(250);
+	waveform1.amplitude(0);
+}
+
+from here: https://forum.pjrc.com/index.php?threads/audio-guestbook-teensy-4-1-please-help.71440/#post-315408
+
+Forum post on guestbook: https://forum.pjrc.com/index.php?threads/teensy-4-0-based-audio-guestbook.70553/
+
+Ringing telepohone: https://www.britishtelephones.com/wavs/ring706.wav
