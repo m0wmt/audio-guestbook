@@ -24,8 +24,8 @@
 #define SDCARD_MOSI_PIN  11
 #define SDCARD_SCK_PIN   13
 
-#define HOOK_PIN 33         // Handset switch
-#define PRESS_PIN 34        // PRESS switch
+#define HANDSET_PIN 41      // Handset switch
+#define PRESS_PIN 40        // PRESS switch
 
 // Globals
 // All audio should be WAV files (44.1kHz 16-bit PCM)
@@ -52,7 +52,7 @@ int ledState = LOW;         // LED state, LOW or HIGH
 static int oneSecond = 1000;
 
 // Use long 40ms debounce time on switches
-Bounce buttonRecord = Bounce(HOOK_PIN, 40);
+Bounce buttonRecord = Bounce(HANDSET_PIN, 40);
 Bounce buttonPress = Bounce(PRESS_PIN, 40);
 
 /* Function prototypes */
@@ -94,7 +94,7 @@ void setup() {
         Serial.println("RTC has set the system time");     
 
     // Configure the input pins
-    pinMode(HOOK_PIN, INPUT_PULLUP);
+    pinMode(HANDSET_PIN, INPUT_PULLUP);
     pinMode(PRESS_PIN, INPUT_PULLUP);
 
     // Reset the maximum reported by AudioMemoryUsageMax
