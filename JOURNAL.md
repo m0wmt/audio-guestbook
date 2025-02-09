@@ -27,7 +27,7 @@ Took the phone to pieces; removed the two screws on the top where the handset re
 
 > Speaker: 			Green == 2 (-ve GND) 		Red == 1 (+ve TIP)
 > 
-> Microphone: 		Blue == 13 (-ve GND) 		White == 10 (+ve MIC)
+> Microphone: 		Blue == 3 (-ve GND) 		White == 10 (+ve MIC)
 > 
 > Handset Switch: 	5 (-ve GND)				   17 (+ve)
 > 
@@ -59,6 +59,14 @@ void setup() {
 Connected a new 3.3v button battery to the RTC ([VBAT + GND](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) next to the SD card on the Teeny) today (7th Feb) and wrote a test program to set and read the RTC.  All seems to work, will leave the battery connected and test to see how long it lasts, according to the [PRJC Teensy forum](https://forum.pjrc.com/index.php) about 1-2 months for the Teensy 4.
 
 Finally fixed the issue with no beep from the speaker, wasn't initalising the mixer section properly, RTFM!  Added RTC code to main program.
+
+Not getting any voice when trying to record, not getting anything to record, just writing out the header!
+
+Need to see these projects:
+// A much more advanced sound recording and data logging project:
+// https://github.com/WMXZ-EU/microSoundRecorder
+// https://github.com/WMXZ-EU/microSoundRecorder/wiki/Hardware-setup
+// https://forum.pjrc.com/threads/52175?p=185386&viewfull=1#post185386
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
