@@ -16,7 +16,7 @@
 
 #include "play_sd_wav.h"
 
-#define DEBUG false       // do not use serial
+#define DEBUG true       // do/do not use serial
 
 // Defines
 // Use Teensy 4.1 SD card, teensy forum thinks it is faster than the audio board SD card interface.
@@ -31,19 +31,25 @@
 // All audio should be WAV files (44.1kHz 16-bit PCM)
 AudioPlaySdWav          playWav1;      
 AudioOutputI2S          audioOutput;    // I2S interface to Speaker/Line Out on Teensy 4.0 Audio shield
-AudioConnection         patchCord1(playWav1, 0, audioOutput, 0);
-AudioConnection         patchCord2(playWav1, 1, audioOutput, 1);
-AudioControlSGTL5000    sgtl5000_1;
-AudioSynthWaveform      waveform1;      // To create the "beep" sfx
 AudioMixer4             mixer;          // Allows merging several inputs to same output
-AudioConnection         patchCord4(mixer, 0, audioOutput, 0); // mixer output to speaker (L)
-AudioConnection         patchCord6(mixer, 0, audioOutput, 1); // mixer output to speaker (R)
+AudioRecordQueue        queue1;         // Create an audio buffer in memory before saving to SD
+AudioSynthWaveform      waveform1;      // To create the "beep" sound effect
+AudioConnection         patchCord1(waveform1, 0, mixer, 0);
+AudioConnection         patchCord2(playWav1, 0, mixer, 1);
+AudioConnection         patchCord3(mixer, 0, audioOutput, 0); // mixer output to speaker (L)
+AudioConnection         patchCord4(mixer, 0, audioOutput, 1); // mixer output to speaker (R)
+AudioConnection         patchCord5(audioOutput, 0, queue1, 1); // mic input to queue (L)
+AudioControlSGTL5000    audioShield;
 
 // Keep track of current state of the device
 enum Mode {Initialising, Ready, Prompting, Recording, Playing};
 Mode mode = Mode::Initialising;
 
-float beep_volume = 1.2f; // not too loud
+float beep_volume = 0.9f; // not too loud
+
+int blinkLed = 500;         // Blink led every n miliseconds
+int ledState = LOW;         // LED state, LOW or HIGH
+static int oneSecond = 1000;
 
 // Use long 40ms debounce time on switches
 Bounce buttonRecord = Bounce(HOOK_PIN, 40);
@@ -54,6 +60,11 @@ static void play_file(const char *filename);
 static void wait(unsigned int milliseconds);
 static void end_Beep(void);
 static void two_tone_Beep(void);
+static void blink_led(void);
+static time_t getTeensy3Time(void);
+static void printDigits(int digits);
+static void digitalClockDisplay(void);
+static void print_time(void);
 
 #if DEBUG
 static void print_mode(void);           // for debugging only
@@ -63,6 +74,8 @@ static void print_mode(void);           // for debugging only
  * @brief Program setup
  */
 void setup() {
+    pinMode(LED_BUILTIN, OUTPUT);     // Orange LED on board
+    digitalWrite(LED_BUILTIN, HIGH);  // Glowing whilst running through setup code
     
     #if DEBUG
     while (!Serial) {
@@ -73,6 +86,12 @@ void setup() {
 
     Serial.println("Setting up audio and SD card");
     #endif
+
+    setSyncProvider(getTeensy3Time);   // the function to get the time from the RTC
+    if (timeStatus() != timeSet) 
+        Serial.println("Unable to sync with the RTC");
+    else
+        Serial.println("RTC has set the system time");     
 
     // Configure the input pins
     pinMode(HOOK_PIN, INPUT_PULLUP);
@@ -85,35 +104,38 @@ void setup() {
     // to reserve for audio data. Each block holds 128 audio samples, or approx 2.9 ms of sound. 
     AudioMemory(60);
 
-    // Comment these out if not using the audio adaptor board.
-    sgtl5000_1.enable();
-    sgtl5000_1.volume(0.5);
-
     mixer.gain(0, 1.0f);
     mixer.gain(1, 1.0f);
+    
+    // Comment these out if not using the audio adaptor board.
+    audioShield.enable();
+    audioShield.volume(0.6);
+    // audioShield.dacVolume(1.0);
+    // audioShield.dacVolumeRamp();
+
+    // Define which input on the audio shield to use (AUDIO_INPUT_LINEIN / AUDIO_INPUT_MIC)
+    audioShield.inputSelect(AUDIO_INPUT_MIC);
 
     // Play a beep to indicate system is online
-/*
     waveform1.begin(beep_volume, 440, WAVEFORM_SINE);
-
-    unsigned long time_now = millis();
-    while(millis() < time_now + 2000){
-        //wait approx. [period] ms
-    }
-    //delay(2000);
+    wait(1000);
     waveform1.amplitude(0);
     delay(1000);
-*/
 
-  // Play a beep to indicate system is online
+    // Serial.println("Attempt to play beeps!");
+    // // Play a beep to indicate system is online
+    Serial.println("End beep");
     end_Beep();
+    delay(1000);
+    Serial.println("Two tone beep");
     two_tone_Beep();
-    
+    // Serial.println("Beeps possibly played!");
+
     // Init SD CARD
     SPI.setMOSI(SDCARD_MOSI_PIN);
     SPI.setSCK(SDCARD_SCK_PIN);
     if (!(SD.begin(SDCARD_CS_PIN))) {
-        // stop here, but print a message repetitively
+        // stop here, and print a message repetitively
         while (1) {
             #if DEBUG
             Serial.println("Unable to access the SD card");
@@ -145,6 +167,8 @@ void setup() {
     #if DEBUG
     print_mode();
     #endif
+
+    digitalWrite(LED_BUILTIN, LOW);   // Turn LED off
 }  
 
 /**
@@ -180,6 +204,9 @@ void loop() {
         #endif
         delay(1000);
     }
+
+    blink_led();
+    print_time();
 }
 
 
@@ -280,4 +307,58 @@ static void two_tone_Beep(void) {
 	waveform1.amplitude(beep_volume);
 	wait(250);
 	waveform1.amplitude(0);
+}
+
+static void blink_led(void) {
+    static unsigned long previousMillis;
+    unsigned long timeNow = millis();
+
+    if (timeNow - previousMillis >= blinkLed) {
+        previousMillis = timeNow;
+        if (ledState == LOW) {
+            ledState = HIGH;
+        } else {
+            ledState = LOW;
+        }
+
+        digitalWrite(LED_BUILTIN, ledState);
+    }
+}
+
+static time_t getTeensy3Time(void) {
+    return Teensy3Clock.get();
+}
+
+static void printDigits(int digits) {  
+    // utility function for digital clock display: prints preceding colon and leading 0
+    Serial.print(":");
+    if(digits < 10)
+        Serial.print('0');
+
+    Serial.print(digits);
+}
+
+static void digitalClockDisplay(void) {
+    // digital clock display of the time
+    Serial.print(hour());
+    printDigits(minute());
+    printDigits(second());
+    Serial.print(" ");
+    Serial.print(day());
+    Serial.print(" ");
+    Serial.print(month());
+    Serial.print(" ");
+    Serial.print(year()); 
+    Serial.println(); 
+}
+
+static void print_time(void) {
+    static unsigned long previousTimeInMillis;
+    unsigned long timeNow = millis();
+
+    if (timeNow - previousTimeInMillis >= oneSecond) {
+        previousTimeInMillis = timeNow;
+
+        digitalClockDisplay();
+    }
 }
