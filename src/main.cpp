@@ -29,16 +29,17 @@
 
 // Globals
 // All audio should be WAV files (44.1kHz 16-bit PCM)
-AudioPlaySdWav          playWav1;      
-AudioOutputI2S          audioOutput;    // I2S interface to Speaker/Line Out on Teensy 4.0 Audio shield
+AudioPlaySdWav          playWav1;       // Play 44.1kHz 16-bit PCM .WAV files
+AudioInputI2S           audioInput;     // I2S input from microphone on Teensy 4.0 Audio shield
 AudioMixer4             mixer;          // Allows merging several inputs to same output
 AudioRecordQueue        queue1;         // Create an audio buffer in memory before saving to SD
 AudioSynthWaveform      waveform1;      // To create the "beep" sound effect
+AudioOutputI2S          audioOutput;    // I2S output to Speaker Out on Teensy 4.0 Audio shield
 AudioConnection         patchCord1(waveform1, 0, mixer, 0);
 AudioConnection         patchCord2(playWav1, 0, mixer, 1);
 AudioConnection         patchCord3(mixer, 0, audioOutput, 0); // mixer output to speaker (L)
 AudioConnection         patchCord4(mixer, 0, audioOutput, 1); // mixer output to speaker (R)
-AudioConnection         patchCord5(audioOutput, 0, queue1, 1); // mic input to queue (L)
+AudioConnection         patchCord5(audioInput, 0, queue1, 0); // mic input to queue (L)
 AudioControlSGTL5000    audioShield;
 
 // Keep track of current state of the device
@@ -50,6 +51,9 @@ float beep_volume = 0.9f; // not too loud
 int blinkLed = 500;         // Blink led every n miliseconds
 int ledState = LOW;         // LED state, LOW or HIGH
 static int oneSecond = 1000;
+char filename[15];          // Filename to save audio recording on SD card
+File frec;                  // The file object itself
+unsigned long recByteSaved = 0L;
 
 // Use long 40ms debounce time on switches
 Bounce buttonRecord = Bounce(HANDSET_PIN, 40);
@@ -65,6 +69,10 @@ static time_t getTeensy3Time(void);
 static void printDigits(int digits);
 static void digitalClockDisplay(void);
 static void print_time(void);
+static void startRecording(void);
+static void continueRecording(void);
+static void stopRecording(void);
+static void writeOutHeader(void);
 
 #if DEBUG
 static void print_mode(void);           // for debugging only
@@ -82,6 +90,9 @@ void setup() {
     // Wait for serial to start!
     } 
 
+    Serial.println("Serial set up correctly");
+    Serial.printf("Audio block set to %d samples\n",AUDIO_BLOCK_SAMPLES);
+  
     print_mode();
 
     Serial.println("Setting up audio and SD card");
@@ -104,18 +115,17 @@ void setup() {
     // to reserve for audio data. Each block holds 128 audio samples, or approx 2.9 ms of sound. 
     AudioMemory(60);
 
-    mixer.gain(0, 1.0f);
-    mixer.gain(1, 1.0f);
-    
     // Comment these out if not using the audio adaptor board.
     audioShield.enable();
     audioShield.volume(0.6);
-    // audioShield.dacVolume(1.0);
-    // audioShield.dacVolumeRamp();
 
     // Define which input on the audio shield to use (AUDIO_INPUT_LINEIN / AUDIO_INPUT_MIC)
     audioShield.inputSelect(AUDIO_INPUT_MIC);
+    audioShield.micGain(40);  // gain in dB from 0 to 63
 
+    mixer.gain(0, 1.0f);
+    mixer.gain(1, 1.0f);
+    
     // Play a beep to indicate system is online
     waveform1.begin(beep_volume, 440, WAVEFORM_SINE);
     wait(1000);
@@ -124,11 +134,11 @@ void setup() {
 
     // Serial.println("Attempt to play beeps!");
     // // Play a beep to indicate system is online
-    Serial.println("End beep");
-    end_Beep();
-    delay(1000);
-    Serial.println("Two tone beep");
-    two_tone_Beep();
+    // Serial.println("End beep");
+    // end_Beep();
+    // delay(1000);
+    // Serial.println("Two tone beep");
+    // two_tone_Beep();
     // Serial.println("Beeps possibly played!");
 
     // Init SD CARD
@@ -168,6 +178,9 @@ void setup() {
     print_mode();
     #endif
 
+    // Reset the maximum reported by AudioMemoryUsageMax
+    AudioMemoryUsageMaxReset();
+
     digitalWrite(LED_BUILTIN, LOW);   // Turn LED off
 }  
 
@@ -179,17 +192,38 @@ void loop() {
     buttonRecord.update();
     buttonPress.update();
 
+    switch(mode) {
+        case Mode::Ready: // to make compiler happy
+        break;  
+
+        case Mode::Initialising: // to make compiler happy
+        break;  
+
+        case Mode::Prompting: // to make compiler happy
+        break;  
+
+        case Mode::Recording:
+            continueRecording();
+        break;
+
+        case Mode::Playing: // to make compiler happy
+        break;  
+    }
+
     // Falling edge occurs when the handset is lifted --> GPO 706 telephone
     if (buttonRecord.fallingEdge()) {
         #if DEBUG
         Serial.println("Handset lifted");
         #endif
         delay(1000);
+        startRecording();
     } else if (buttonRecord.risingEdge()) {  // Handset is replaced
         #if DEBUG
         Serial.println("Handset replaced");
         #endif
         delay(1000);
+        stopRecording();
+        end_Beep();
     }
 
     // Falling edge occurs when the PRESS button is lifted --> GPO 706 telephone
@@ -198,15 +232,21 @@ void loop() {
         Serial.println("PRESS button pressed");
         #endif
         delay(1000);
+        startRecording();
     } else if (buttonPress.risingEdge()) {  // PRESS button is released
         #if DEBUG
         Serial.println("PRESS button released");
         #endif
         delay(1000);
+        stopRecording();
+        #if DEBUG
+        Serial.print("Max number of blocks used by Audio were: ");
+        Serial.println(AudioMemoryUsageMax());
+        #endif
     }
 
     blink_led();
-    print_time();
+//    print_time();
 }
 
 
@@ -362,3 +402,133 @@ static void print_time(void) {
         digitalClockDisplay();
     }
 }
+
+static void startRecording(void) {
+  // Find the first available file number
+//  for (uint8_t i=0; i<9999; i++) { // BUGFIX uint8_t overflows if it reaches 255  
+  for (uint16_t i=0; i<9999; i++) {   
+    // Format the counter as a five-digit number with leading zeroes, followed by file extension
+    snprintf(filename, 11, " %05d.wav", i);
+    // Create if does not exist, do not open existing, write, sync after write
+    if (!SD.exists(filename)) {
+      break;
+    }
+  }
+  frec = SD.open(filename, FILE_WRITE);
+  Serial.println("Creating file.");
+  if(frec) {
+    Serial.print("Recording to ");
+    Serial.println(filename);
+    queue1.begin();
+    mode = Mode::Recording; print_mode();
+    recByteSaved = 0L;
+  }
+  else {
+    Serial.println("Couldn't open file to record!");
+  }
+}
+
+static void continueRecording(void) {
+#define NBLOX 16  
+  // Check if there is data in the queue
+  if (queue1.available() >= NBLOX) {
+    byte buffer[NBLOX*AUDIO_BLOCK_SAMPLES*sizeof(int16_t)];
+    // Fetch 2 blocks from the audio library and copy
+    // into a 512 byte buffer.  The Arduino SD library
+    // is most efficient when full 512 byte sector size
+    // writes are used.
+    for (int i=0;i<NBLOX;i++)
+    {
+      memcpy(buffer+i*AUDIO_BLOCK_SAMPLES*sizeof(int16_t), queue1.readBuffer(), AUDIO_BLOCK_SAMPLES*sizeof(int16_t));
+      queue1.freeBuffer();
+    }
+    // Write all 512 bytes to the SD card
+    frec.write(buffer, sizeof buffer);
+    recByteSaved += sizeof buffer;
+  }  
+}
+
+static void stopRecording(void) {
+  Serial.println("stopRecording");
+  // Stop adding any new data to the queue
+  queue1.end();
+  // Flush all existing remaining data from the queue
+  while (queue1.available() > 0) {
+    // Save to open file
+    frec.write((byte*)queue1.readBuffer(), AUDIO_BLOCK_SAMPLES*sizeof(int16_t));
+    queue1.freeBuffer();
+    recByteSaved += AUDIO_BLOCK_SAMPLES*sizeof(int16_t);
+    Serial.println("Flushed audio to file");
+  }
+  writeOutHeader();
+  // Close the file
+  frec.close();
+  Serial.println("Closed file");
+  mode = Mode::Ready; print_mode();
+}
+
+
+static void writeOutHeader(void) { // update WAV header with final filesize/datasize
+    // variables for writing to WAV file
+    unsigned long ChunkSize = 0L;
+    unsigned long Subchunk1Size = 16;
+    unsigned int AudioFormat = 1;
+    unsigned int numChannels = 1;
+    unsigned long sampleRate = 44100;
+    unsigned int bitsPerSample = 16;
+    unsigned long byteRate = sampleRate*numChannels*(bitsPerSample/8);// samplerate x channels x (bitspersample / 8)
+    unsigned int blockAlign = numChannels*bitsPerSample/8;
+    unsigned long Subchunk2Size = 0L;
+    byte byte1, byte2, byte3, byte4;
+
+  //  NumSamples = (recByteSaved*8)/bitsPerSample/numChannels;
+  //  Subchunk2Size = NumSamples*numChannels*bitsPerSample/8; // number of samples x number of channels x number of bytes per sample
+    Subchunk2Size = recByteSaved - 42; // because we didn't make space for the header to start with! Lose 21 samples...
+    ChunkSize = Subchunk2Size + 34; // was 36;
+    frec.seek(0);
+    frec.write("RIFF");
+    byte1 = ChunkSize & 0xff;
+    byte2 = (ChunkSize >> 8) & 0xff;
+    byte3 = (ChunkSize >> 16) & 0xff;
+    byte4 = (ChunkSize >> 24) & 0xff;  
+    frec.write(byte1);  frec.write(byte2);  frec.write(byte3);  frec.write(byte4);
+    frec.write("WAVE");
+    frec.write("fmt ");
+    byte1 = Subchunk1Size & 0xff;
+    byte2 = (Subchunk1Size >> 8) & 0xff;
+    byte3 = (Subchunk1Size >> 16) & 0xff;
+    byte4 = (Subchunk1Size >> 24) & 0xff;  
+    frec.write(byte1);  frec.write(byte2);  frec.write(byte3);  frec.write(byte4);
+    byte1 = AudioFormat & 0xff;
+    byte2 = (AudioFormat >> 8) & 0xff;
+    frec.write(byte1);  frec.write(byte2); 
+    byte1 = numChannels & 0xff;
+    byte2 = (numChannels >> 8) & 0xff;
+    frec.write(byte1);  frec.write(byte2); 
+    byte1 = sampleRate & 0xff;
+    byte2 = (sampleRate >> 8) & 0xff;
+    byte3 = (sampleRate >> 16) & 0xff;
+    byte4 = (sampleRate >> 24) & 0xff;  
+    frec.write(byte1);  frec.write(byte2);  frec.write(byte3);  frec.write(byte4);
+    byte1 = byteRate & 0xff;
+    byte2 = (byteRate >> 8) & 0xff;
+    byte3 = (byteRate >> 16) & 0xff;
+    byte4 = (byteRate >> 24) & 0xff;  
+    frec.write(byte1);  frec.write(byte2);  frec.write(byte3);  frec.write(byte4);
+    byte1 = blockAlign & 0xff;
+    byte2 = (blockAlign >> 8) & 0xff;
+    frec.write(byte1);  frec.write(byte2); 
+    byte1 = bitsPerSample & 0xff;
+    byte2 = (bitsPerSample >> 8) & 0xff;
+    frec.write(byte1);  frec.write(byte2); 
+    frec.write("data");
+    byte1 = Subchunk2Size & 0xff;
+    byte2 = (Subchunk2Size >> 8) & 0xff;
+    byte3 = (Subchunk2Size >> 16) & 0xff;
+    byte4 = (Subchunk2Size >> 24) & 0xff;  
+    frec.write(byte1);  frec.write(byte2);  frec.write(byte3);  frec.write(byte4);
+    frec.close();
+    Serial.println("header written"); 
+    Serial.print("Subchunk2: "); 
+    Serial.println(Subchunk2Size); 
+  }
