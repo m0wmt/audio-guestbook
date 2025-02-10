@@ -62,19 +62,17 @@ Finally fixed the issue with no beep from the speaker, wasn't initalising the mi
 
 Not getting any voice when trying to record, not getting anything to record, just writing out the header!
 
-Need to see these projects:
-// A much more advanced sound recording and data logging project:
-// https://github.com/WMXZ-EU/microSoundRecorder
-// https://github.com/WMXZ-EU/microSoundRecorder/wiki/Hardware-setup
-// https://forum.pjrc.com/threads/52175?p=185386&viewfull=1#post185386
+Fixed the recording issue, hadn't connected an audio input (from the microphone) stream to the output queue, had connected the speaker by mistake to the queue!  Testing micGain(40) values for the recordings, haven't decided on the best value yet. Replaying the .wav files in Audacity gives a good visual indication of how much gain is too much. Have ordered some electec microphones to see if they are better than the telephones original one, should be an easy swap if they're better.
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
 * RTC using a button battery - Done.
-* Record message via handset speaker.  Need to wait for right angle connectors to arrive before doing the MIC, only way to test that will be to speak in to it!
-* Play sound when program starts up.
+* Record message via handset speaker.  Need to wait for right angle connectors to arrive before doing the MIC, only way to test that will be to speak in to it! - Partially done.
+* Play sound when program starts up - Done.
 * Play message to user to record after the beep.
-* Download Audacity to the PC for recording WAV files and playing them back. Downloaded but not yet used.
+* Download Audacity to the PC for recording WAV files and playing them back - Done and tested.
+* Program startup logic, handset not on phone, no SD card etc.
 * Program logic of handset/PRESS button.
+* Handle possible errors.
 * Can we use the telephone dial to carry out actions?
