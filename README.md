@@ -38,40 +38,39 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
 </figure>
 
 <figure>
+  <figcaption>Teensy Audio Board 4.0</figcaption>
   <img
   src="./images/teensy-audio.jpeg"
   alt="Teensy 4.0 Audio Board">
-  <figcaption>Teensy Audio Board 4.0</figcaption>
 </figure>
 
 <figure>
+  <figcaption>ESP32-S3 Mini</figcaption>
   <img
   src="./images/esp32-s3-mini.jpeg"
   alt="ESP32-S3 Mini Development Board">
-  <figcaption>ESP32-S3 Mini</figcaption>
 </figure>
 
 <figure>
+  <figcaption>GPO No. 706 Rotary Phone</figcaption>
   <img
   src="./images/phone.png"
   alt="GPO No. 706 Rotary Phone">
-  <figcaption>GPO No. 706 Rotary Phone</figcaption>
 </figure>
 
 <figure>
+  <figcaption>Phone terminal connections</figcaption>
   <img
   src="./images/connections.jpeg"
   alt="Phone terminal connections">
-  <figcaption>Phone terminal connections</figcaption>
 </figure>
 
-
 <figure>
+  <figcaption>Electret Microphone</figcaption>
   <img
   src="./images/electric-mic.jpg"
-  style="width: 330px;" 
+  style="width: 350px;" 
   alt="Electret Microphone">
-  <figcaption>Electret Microphone</figcaption>
 </figure>
 
 ## Wiring
