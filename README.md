@@ -28,7 +28,7 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
 - LED light(s)?
 - Switch
 - ESP32-S3 Mini
-- Electrec mic
+- [Electret](https://en.wikipedia.org/wiki/Electret_microphone) microphone
 
 <figure>
   <figcaption>Teensy 4.1</figcaption>
