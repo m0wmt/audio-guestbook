@@ -31,10 +31,10 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
 - Electrec mic
 
 <figure>
+  <figcaption>Teensy 4.1</figcaption>
   <img
   src="./images/teensy4-1.jpeg"
   alt="Teensy 4.1 Development Board">
-  <figcaption>Teensy 4.1</figcaption>
 </figure>
 
 <figure>
