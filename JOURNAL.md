@@ -62,7 +62,9 @@ Finally fixed the issue with no beep from the speaker, wasn't initalising the mi
 
 Not getting any voice when trying to record, not getting anything to record, just writing out the header!
 
-Fixed the recording issue, hadn't connected an audio input (from the microphone) stream to the output queue, had connected the speaker by mistake to the queue!  Testing micGain(40) values for the recordings, haven't decided on the best value yet. Replaying the .wav files in Audacity gives a good visual indication of how much gain is too much. Have ordered some electrec microphones to see if they are better than the telephones original one, should be an easy swap if they're better.
+Fixed the recording issue, hadn't connected an audio input (from the microphone) stream to the output queue, had connected the speaker by mistake to the queue!  Testing micGain(40) values for the recordings, haven't decided on the best value yet. Replaying the .wav files in Audacity gives a good visual indication of how much gain is too much. Have ordered some electret microphones to see if they are better than the telephones original one, should be an easy swap if they're better.
+
+Microphone has arrived, will test next time I'm at the computer.
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
