@@ -65,11 +65,13 @@ This project is an update (VSCode + Platformio vs Arduino IDE) of the audio gues
   <figcaption>Phone terminal connections</figcaption>
 </figure>
 
+
 <figure>
   <img
   src="./images/electric-mic.jpg"
-  alt="Electrec Microphone">
-  <figcaption>Electrec Microphone</figcaption>
+  style="width: 330px;" 
+  alt="Electret Microphone">
+  <figcaption>Electret Microphone</figcaption>
 </figure>
 
 ## Wiring
