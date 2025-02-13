@@ -6,7 +6,7 @@ This project is an update (VSCode + PlatformIO VS Arduino IDE) of the audio gues
 ## Technical 
 
 ### Code Editor
-**VSCode using the following plugins:**
+VSCode using the following plugins:
   * PlatformIO
   * Clang-Format (code formatting) with a bespoke .clang-format file
 
