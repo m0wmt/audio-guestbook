@@ -82,3 +82,4 @@ Development Tasks:
 * Program logic of handset/PRESS button.
 * Handle possible errors.
 * Can we use the telephone dial to carry out actions?
+* Use [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) C coding standards - In progress.
