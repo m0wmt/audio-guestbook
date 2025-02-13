@@ -6,12 +6,12 @@ This project is an update (VSCode + PlatformIO VS Arduino IDE) of the audio gues
 ## Technical 
 
 ### Code Editor
-***VSCode using the following plugins:
+**VSCode using the following plugins:**
   * PlatformIO
   * Clang-Format (code formatting) with a bespoke .clang-format file
 
 ### Audio Library
-As mentioned in the JOURNAL, PRJC forum thread on the audio guestbook noted above we have increased the number of audio samples in an "audio block" from 128 to 256. This means that audio updates run every 5.8ms rather than the standard 2.9ms, with the consequence that an SD write can take nearly 12ms before an update is "lost".
+As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted that increasing the number of audio samples in an "audio block" from 128 to 256 mean less writes to the SD card. Audio updates run every 5.8ms rather than the standard 2.9ms, with the consequence that an SD write can take nearly 12ms before an update is "lost".
 
 ## Requirements
 - Power switch to turn recorder on/off
