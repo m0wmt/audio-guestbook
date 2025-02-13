@@ -62,9 +62,13 @@ Finally fixed the issue with no beep from the speaker, wasn't initalising the mi
 
 Not getting any voice when trying to record, not getting anything to record, just writing out the header!
 
-Fixed the recording issue, hadn't connected an audio input (from the microphone) stream to the output queue, had connected the speaker by mistake to the queue!  Testing micGain(40) values for the recordings, haven't decided on the best value yet. Replaying the .wav files in Audacity gives a good visual indication of how much gain is too much. Have ordered some electret microphones to see if they are better than the telephones original one, should be an easy swap if they're better.
+Fixed the recording issue, hadn't connected an audio input (from the microphone) stream to the output queue (in code), had connected the speaker by mistake to the queue!  Testing micGain(40) values for the recordings, haven't decided on the best value yet. Replaying the .wav files in Audacity gives a good visual indication of how much gain is too much. Have ordered some electret microphones to see if they are better than the telephones original one, should be an easy swap if they're better.
 
-Microphone has arrived, will test next time I'm at the computer.
+Electret microphones have arrived (via eBay for a couple of quid) and seem to give a cleaner voice recording, though this will need to be tested in the phone handset to confirm at some point.
+
+Tidy up code a bit and start to document functions. Modified AUDIO_BLOCK_SAMPLES to 256 in /home/#########/.platformio/packages/framework-arduinoteensy/cores/teensy4/AudioStream.h as suggested by the audio guestbook post on the PRJC forum. Did a full clean and rebuild of project and changes are picked up - as this will probably be the only Teensy audio project I do changing the library is fine for now.
+
+Now working on phone handset logic, will worry about PRESS button and dialer after happy with this logic.
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
