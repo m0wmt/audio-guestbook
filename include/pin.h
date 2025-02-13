@@ -1,4 +1,7 @@
 // From: https://github.com/TeensyUser/doc/blob/master/examples/GPIO/pinList/pin.h
+#ifndef PIN_H
+#define PIN_H
+
 #include "core_pins.h"
 
 class Pin
@@ -38,3 +41,4 @@ Pin::Pin(unsigned pin, unsigned mode)
 }
 
 #endif
+#endif /* PIN_H */

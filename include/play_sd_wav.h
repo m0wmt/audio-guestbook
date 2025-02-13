@@ -24,8 +24,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef play_sd_wavx_h_
-#define play_sd_wavx_h_
+#ifndef PLAY_SD_WAV_H
+#define PLAY_SD_WAV_H
 
 #include "Arduino.h"
 #include "AudioStream.h"
@@ -65,4 +65,4 @@ private:
 	uint8_t leftover_bytes;
 };
 
-#endif
+#endif /* PLAY_SD_WAV_H */
