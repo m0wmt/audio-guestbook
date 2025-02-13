@@ -68,7 +68,9 @@ Electret microphones have arrived (via eBay for a couple of quid) and seem to gi
 
 Tidy up code a bit and start to document functions. Modified AUDIO_BLOCK_SAMPLES to 256 in /home/#########/.platformio/packages/framework-arduinoteensy/cores/teensy4/AudioStream.h as suggested by the audio guestbook post on the PRJC forum. Did a full clean and rebuild of project and changes are picked up - as this will probably be the only Teensy audio project I do changing the library is fine for now.
 
-Now working on phone handset logic, will worry about PRESS button and dialer after happy with this logic.
+Now working on phone handset logic and coding standards, attempting to keep as close to the [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) coding standards as I'm happy with.  
+
+Will worry about PRESS button and dialer after happy with this logic.
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
