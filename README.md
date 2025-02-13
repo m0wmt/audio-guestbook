@@ -1,7 +1,17 @@
 # audio-guestbook
 Audio guestbook for an upcoming wedding.  Let guests leave a message so the bride and groom can relive the day and hear what their loved ones/friends had to say via an old BT rotary telephone (using a Teensy development board and a Teensy Audio board) to record messages to a micro SD card.
 
-This project is an update (VSCode + Platformio VS Arduino IDE) of the audio guestbook project by [Playful Technology](https://github.com/playfultechnology/audio-guestbook).
+This project is an update (VSCode + PlatformIO VS Arduino IDE) of the audio guestbook project by [Playful Technology](https://github.com/playfultechnology/audio-guestbook).
+
+## Technical 
+
+### Code Editor
+***VSCode using the following plugins:
+  * PlatformIO
+  * Clang-Format (code formatting) with a bespoke .clang-format file
+
+### Audio Library
+As mentioned in the JOURNAL, PRJC forum thread on the audio guestbook noted above we have increased the number of audio samples in an "audio block" from 128 to 256. This means that audio updates run every 5.8ms rather than the standard 2.9ms, with the consequence that an SD write can take nearly 12ms before an update is "lost".
 
 ## Requirements
 - Power switch to turn recorder on/off
