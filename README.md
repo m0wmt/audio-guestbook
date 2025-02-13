@@ -73,12 +73,16 @@ This project is an update (VSCode + Platformio VS Arduino IDE) of the audio gues
   alt="Electret Microphone">
 </figure>
 
-## Wiring
-Audio board connected to Teensy through corresponding pins.  Handset lever, GND to terminal 5 (T5) on the handset, +VE to T17 on the handset. PRESS button, GND to T13, +VE to T12.
-
-WIRING DIAGRAM TO FOLLOW
-
 ## Coding Journal
 See the [JOURNAL.md](JOURNAL.md) file for a blow-by-blow account of progress etc.
 
+## Wiring
+Teensy audio board is connected to the Teensy board through the corresponding pins.  Thank you to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant)for providing the wiring diagram below.
+
+<figure>
+  <figcaption>Wiring Diagram</figcaption>
+  <img
+  src="./images/wiring-diagram-scale.png"
+  alt="Wiring Diagram">
+</figure>
 
