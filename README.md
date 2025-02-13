@@ -11,7 +11,7 @@ VSCode using the following plugins:
   * Clang-Format (code formatting) with a bespoke .clang-format file
 
 ### Coding Standards
-Using the [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) embedded C coding standards. Unable to adhere 100% due to clang-format issues and personl preferences, e.g. line length which I prefer to be 120 wide.
+Using the [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) embedded C coding standards. Unable to adhere 100% due to clang-format issues and personal preferences, e.g. line length which I prefer to be 120 wide.
 
 ### Audio Library
 As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted that increasing the number of audio samples in an "audio block" from 128 to 256 mean less writes to the SD card. Audio updates run every 5.8ms rather than the standard 2.9ms, with the consequence that an SD write can take nearly 12ms before an update is "lost".
