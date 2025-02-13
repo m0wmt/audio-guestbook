@@ -1,7 +1,7 @@
 # audio-guestbook
 Audio guestbook for an upcoming wedding.  Let guests leave a message so the bride and groom can relive the day and hear what their loved ones/friends had to say via an old BT rotary telephone (using a Teensy development board and a Teensy Audio board) to record messages to a micro SD card.
 
-This project is an update (VSCode + Platformio vs Arduino IDE) of the audio guestbook project by [Playful Technology](https://github.com/playfultechnology/audio-guestbook).
+This project is an update (VSCode + Platformio VS Arduino IDE) of the audio guestbook project by [Playful Technology](https://github.com/playfultechnology/audio-guestbook).
 
 ## Requirements
 - Power switch to turn recorder on/off
