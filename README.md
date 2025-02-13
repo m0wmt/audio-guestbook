@@ -77,7 +77,7 @@ This project is an update (VSCode + Platformio VS Arduino IDE) of the audio gues
 See the [JOURNAL.md](JOURNAL.md) file for a blow-by-blow account of progress etc.
 
 ## Wiring
-Teensy audio board is connected to the Teensy board through the corresponding pins.  Thank you to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant)for providing the wiring diagram below.
+Teensy audio board is connected to the Teensy board through the corresponding pins.  Thank you to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant) for providing the wiring diagram below.
 
 <figure>
   <img
