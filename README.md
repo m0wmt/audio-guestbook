@@ -80,7 +80,6 @@ See the [JOURNAL.md](JOURNAL.md) file for a blow-by-blow account of progress etc
 Teensy audio board is connected to the Teensy board through the corresponding pins.  Thank you to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant)for providing the wiring diagram below.
 
 <figure>
-  <figcaption>Wiring Diagram</figcaption>
   <img
   src="./images/wiring-diagram-scale.png"
   alt="Wiring Diagram">
