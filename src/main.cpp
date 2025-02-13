@@ -56,6 +56,8 @@
 #define HANDSET_PIN 41 // Handset switch
 #define PRESS_PIN 40   // PRESS switch
 
+#define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
+
 /* Globals */
 AudioPlaySdWav playWaveFile;      // Play 44.1kHz 16-bit PCM .WAV files
 AudioInputI2S audioInput;         // I2S input from microphone on Teensy 4.0 Audio shield
@@ -83,42 +85,42 @@ enum Mode { // Keep track of current state of the device
 Mode mode = Mode::Initialising;
 
 float beep_volume = 0.9f; // not too loud
-int blinkLed = 500;       // Blink led every n miliseconds
-int ledState = LOW;       // LED state, LOW or HIGH
-static int oneSecond = 1000;
+int led_state = LOW;      // LED state, LOW or HIGH
+static int one_second = 1000;
 char filename[15]; // Filename to save audio recording on SD card
-File fileObject;   // The file object itself
-unsigned long recByteSaved = 0L;
+File file_object;  // The file object itself
+unsigned long record_bytes_saved = 0L;
 uint32_t wait_start = 0;
 
 // Debounce on switches
-Bounce phoneHandset = Bounce(HANDSET_PIN, 40);
-Bounce pressButton = Bounce(PRESS_PIN, 40);
+Bounce phone_handset = Bounce(HANDSET_PIN, 40);
+Bounce press_button = Bounce(PRESS_PIN, 40);
 
 /* Function prototypes */
 static void play_file(const char *filename);
 static void wait(unsigned int milliseconds);
 static void end_Beep(void);
-static void two_tone_Beep(void);
+static void sos(void);
+static void sd_card_error(void);
 static void blink_led(void);
-static time_t getTeensy3Time(void);
-static void printDigits(int digits);
-static void digitalClockDisplay(void);
+static time_t get_teensy_three_time(void);
+static void print_digits(int digits);
+static void digital_clock_display(void);
 static void print_time(void);
-static void startRecording(void);
-static void continueRecording(void);
-static void stopRecording(void);
-static void writeOutHeader(void);
-
+static void start_recording(void);
+static void continue_recording(void);
+static void stop_recording(void);
+static void write_out_wav_header(void);
 static void print_mode(void); // for debugging only
 
 /**
  * @brief Program setup.
  */
 void setup() {
-    pinMode(LED_BUILTIN, OUTPUT); // Orange LED on board
-    digitalWrite(LED_BUILTIN,
-                 HIGH); // Glowing whilst running through setup code
+    bool b_sd_card = false; // SD card present or not
+
+    pinMode(LED_BUILTIN, OUTPUT);    // Orange LED on board
+    digitalWrite(LED_BUILTIN, HIGH); // Glowing whilst running through setup code
 
     // while (!Serial) {
     //     // Wait for serial to start!
@@ -134,7 +136,7 @@ void setup() {
 
     Serial.println("Setting up audio and SD card");
 
-    setSyncProvider(getTeensy3Time); // the function to get the time from the RTC
+    setSyncProvider(get_teensy_three_time); // the function to get the time from the RTC
     if (timeStatus() != timeSet)
         Serial.println("Unable to sync with the RTC");
     else
@@ -165,29 +167,30 @@ void setup() {
     mixer.gain(1, 1.0f);
 
     // Play a beep to indicate system is online
-    synthWaveform.begin(beep_volume, 440, WAVEFORM_SINE);
-    wait(1000);
-    synthWaveform.amplitude(0);
-    delay(1000);
-
-    // Serial.println("Attempt to play beeps!");
-    // // Play a beep to indicate system is online
-    // Serial.println("End beep");
-    // end_Beep();
-    // delay(1000);
-    // Serial.println("Two tone beep");
-    // two_tone_Beep();
-    // Serial.println("Beeps possibly played!");
+    // synthWaveform.begin(beep_volume, 440, WAVEFORM_SINE);
+    // wait(1000);
+    // synthWaveform.amplitude(0);
+    sos();
 
     // Init SD CARD
     SPI.setMOSI(SDCARD_MOSI_PIN);
     SPI.setSCK(SDCARD_SCK_PIN);
     if (!(SD.begin(SDCARD_CS_PIN))) {
-        // stop here, and print a message repetitively
-        while (1) {
-            Serial.println("Unable to access the SD card");
+        // Stop here, and print a message repetitively, this will cause the LED to stay lit (not that anyone can see
+        // this!) and the beep tone to carry on playing to indicate an error.
+        while (!b_sd_card) {
+            //Serial.println("Unable to access the SD card");
             delay(500);
+            //sos();
+            sd_card_error();
+            if (SD.begin(SDCARD_CS_PIN)) {
+                b_sd_card = true;
+                Serial.println("SD card present");
+            }
         }
+    } else {
+        b_sd_card = true;
+        Serial.println("SD card present");
     }
 
     // filenames are always uppercase 8.3 format
@@ -221,8 +224,8 @@ void setup() {
  */
 void loop() {
     // Read the buttons - can we move these to an interrupt?
-    phoneHandset.update();
-    pressButton.update();
+    phone_handset.update();
+    press_button.update();
 
     switch (mode) {
     case Mode::Initialising:
@@ -260,8 +263,8 @@ void loop() {
         // Wait for greeting to end OR handset to is replaced
         if (playWaveFile.isPlaying()) {
             // Check whether the handset is replaced
-            phoneHandset.update();
-            if (phoneHandset.fallingEdge()) {
+            phone_handset.update();
+            if (phone_handset.fallingEdge()) {
                 // Handset is replaced
                 playWaveFile.stop();
                 mode = Mode::Ready;
@@ -272,12 +275,12 @@ void loop() {
             wait(250);
             synthWaveform.amplitude(0); // silence beep
             // Start the recording function
-            startRecording();
+            start_recording();
         }
         break;
 
     case Mode::Recording:
-        continueRecording();
+        continue_recording();
         break;
 
     case Mode::Playing:
@@ -288,29 +291,29 @@ void loop() {
     /* Check HANDSET and PRESS button movement and action */
 
     // Falling edge occurs when the handset is lifted --> GPO 706 telephone
-    if (phoneHandset.fallingEdge()) {
+    if (phone_handset.fallingEdge()) {
         Serial.println("Handset lifted");
         delay(1000);
-        startRecording();
-    } else if (phoneHandset.risingEdge()) { // Handset is replaced
+        start_recording();
+    } else if (phone_handset.risingEdge()) { // Handset is replaced
         Serial.println("Handset replaced");
         delay(1000);
-        stopRecording();
+        stop_recording();
         end_Beep();
     }
 
     // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
-    if (pressButton.fallingEdge()) {
+    if (press_button.fallingEdge()) {
         Serial.println("PRESS button pressed");
-        delay(1000);
-        startRecording();
-    } else if (pressButton.risingEdge()) { // PRESS button is released
+        // delay(1000);
+        // start_recording();
+    } else if (press_button.risingEdge()) { // PRESS button is released
         Serial.println("PRESS button released");
         delay(1000);
         if (mode != Mode::Ready) {
-            stopRecording();
-            Serial.print("Max number of blocks used by Audio were: ");
-            Serial.println(AudioMemoryUsageMax());
+            // stop_recording();
+            // Serial.print("Max number of blocks used by Audio were: ");
+            // Serial.println(AudioMemoryUsageMax());
         }
     }
 
@@ -382,7 +385,6 @@ static void print_mode(void) {
     }
 }
 
-
 // WHAT DO WE DO WITH CHANGES IN BUTTONS? - TODO
 /**
  * @brief Non-blocking delay, which pauses execution of main program logic, while still listening for input
@@ -391,18 +393,21 @@ static void wait(unsigned int milliseconds) {
     elapsedMillis msec = 0;
 
     while (msec <= milliseconds) {
-        phoneHandset.update();
-        //    buttonPlay.update();
-        if (phoneHandset.fallingEdge()) {
-            Serial.println("Button (pin 0) Press");
+        phone_handset.update();
+        press_button.update();
+        if (phone_handset.fallingEdge()) {
+            Serial.println("WAIT: Handset lifted");
         }
-        //   if (buttonPlay.fallingEdge()) Serial.println("Button (pin 1)
-        //   Press");
-        if (phoneHandset.risingEdge()) {
-            Serial.println("Button (pin 0) Release");
+        if (press_button.fallingEdge()) {
+            Serial.println("WAIT: PRESS button pressed");
         }
-        //    if (buttonPlay.risingEdge()) Serial.println("Button (pin 1)
-        //    Release");
+        
+        if (phone_handset.risingEdge()) {
+            Serial.println("WAIT Handset replaced");
+        }
+        if (press_button.risingEdge()) {
+            Serial.println("WAIT: PRESS button released");
+        }
     }
 }
 
@@ -429,28 +434,103 @@ static void end_Beep(void) {
 }
 
 /**
- * @brief Play a short two tone beep.
+ * @brief Play morse code SOS.
  */
-static void two_tone_Beep(void) {
-    synthWaveform.frequency(523.25);
+static void sos(void) {
+    // Morse code timings
+    uint8_t dot = 80; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+    uint16_t letter_space = dot * 3;
+    uint16_t word_space = dot * 7;
+
+    // 3 dots
     synthWaveform.amplitude(beep_volume);
-    wait(250);
+    synthWaveform.frequency(800);
+    wait(dot);
     synthWaveform.amplitude(0);
-    synthWaveform.frequency(375.0);
-    wait(250);
+    wait(symbol_space);
     synthWaveform.amplitude(beep_volume);
-    wait(250);
+    wait(dot);
     synthWaveform.amplitude(0);
-    synthWaveform.frequency(523.25);
-    wait(250);
+    wait(symbol_space);
     synthWaveform.amplitude(beep_volume);
-    wait(250);
+    wait(dot);
     synthWaveform.amplitude(0);
-    synthWaveform.frequency(375.0);
-    wait(250);
+
+    wait(letter_space);
+
+    // 3 dashes
     synthWaveform.amplitude(beep_volume);
-    wait(250);
+    wait(dash);
     synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dash);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dash);
+    synthWaveform.amplitude(0);
+
+    wait(letter_space);
+
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+
+    wait(word_space);
+}
+
+/**
+ * @brief Play morse code SD to indicate SD card error.
+ */
+static void sd_card_error(void) {
+    // Morse code timings
+    uint8_t dot = 80; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+    uint16_t letter_space = dot * 3;
+    uint16_t word_space = dot * 7;
+
+    // 3 dots
+    synthWaveform.amplitude(beep_volume);
+    synthWaveform.frequency(800);
+    wait(dot);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+
+    wait(letter_space);
+
+    // 1 dash 2 dots
+    synthWaveform.amplitude(beep_volume);
+    wait(dash);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+    wait(symbol_space);
+    synthWaveform.amplitude(beep_volume);
+    wait(dot);
+    synthWaveform.amplitude(0);
+
+    wait(word_space);
 }
 
 /**
@@ -460,27 +540,27 @@ static void blink_led(void) {
     static unsigned long previousMillis;
     unsigned long timeNow = millis();
 
-    if (timeNow - previousMillis >= blinkLed) {
+    if (timeNow - previousMillis >= LED_BLINK_DELAY) {
         previousMillis = timeNow;
-        if (ledState == LOW) {
-            ledState = HIGH;
+        if (led_state == LOW) {
+            led_state = HIGH;
         } else {
-            ledState = LOW;
+            led_state = LOW;
         }
 
-        digitalWrite(LED_BUILTIN, ledState);
+        digitalWrite(LED_BUILTIN, led_state);
     }
 }
 
 /**
  * @brief Get the time from RTC (if available).
  */
-static time_t getTeensy3Time(void) { return Teensy3Clock.get(); }
+static time_t get_teensy_three_time(void) { return Teensy3Clock.get(); }
 
 /**
  * @brief Utility function for digital clock display: prints preceding colon and leading 0.
  */
-static void printDigits(int digits) {
+static void print_digits(int digits) {
     Serial.print(":");
     if (digits < 10)
         Serial.print('0');
@@ -491,10 +571,10 @@ static void printDigits(int digits) {
 /**
  * @brief Digital clock display of the time.
  */
-static void digitalClockDisplay(void) {
+static void digital_clock_display(void) {
     Serial.print(hour());
-    printDigits(minute());
-    printDigits(second());
+    print_digits(minute());
+    print_digits(second());
     Serial.print(" ");
     Serial.print(day());
     Serial.print(" ");
@@ -511,10 +591,10 @@ static void print_time(void) {
     static unsigned long previousTimeInMillis;
     unsigned long timeNow = millis();
 
-    if (timeNow - previousTimeInMillis >= oneSecond) {
+    if (timeNow - previousTimeInMillis >= one_second) {
         previousTimeInMillis = timeNow;
 
-        digitalClockDisplay();
+        digital_clock_display();
     }
 }
 
@@ -522,7 +602,7 @@ static void print_time(void) {
 /**
  * @brief Start recording voice to the SD card in .wav format.
  */
-static void startRecording(void) {
+static void start_recording(void) {
     // Find the first available file number
     for (uint16_t i = 0; i < 9999; i++) {
         // Format the counter as a five-digit number with leading zeroes, followed by file extension
@@ -533,15 +613,15 @@ static void startRecording(void) {
         }
     }
 
-    fileObject = SD.open(filename, FILE_WRITE);
+    file_object = SD.open(filename, FILE_WRITE);
     Serial.println("Creating file.");
-    if (fileObject) {
+    if (file_object) {
         Serial.print("Recording to ");
         Serial.println(filename);
         queue1.begin();
         mode = Mode::Recording;
         print_mode();
-        recByteSaved = 0L;
+        record_bytes_saved = 0L;
     } else {
         Serial.println("Couldn't open file to record!");
     }
@@ -551,7 +631,7 @@ static void startRecording(void) {
 /**
  * @brief Continue recording voice to the SD card.
  */
-static void continueRecording(void) {
+static void continue_recording(void) {
 #define NBLOX 16
     // Check if there is data in the queue
     if (queue1.available() >= NBLOX) {
@@ -566,8 +646,8 @@ static void continueRecording(void) {
             queue1.freeBuffer();
         }
         // Write all 512 bytes to the SD card
-        fileObject.write(buffer, sizeof buffer);
-        recByteSaved += sizeof buffer;
+        file_object.write(buffer, sizeof buffer);
+        record_bytes_saved += sizeof buffer;
     }
 }
 
@@ -575,22 +655,22 @@ static void continueRecording(void) {
 /**
  * @brief Stop recording voice, write out any remaining data to the SD card.
  */
-static void stopRecording(void) {
+static void stop_recording(void) {
     Serial.println("stopRecording");
     // Stop adding any new data to the queue
     queue1.end();
     // Flush all existing remaining data from the queue
     while (queue1.available() > 0) {
         // Save to open file
-        fileObject.write((byte *)queue1.readBuffer(), AUDIO_BLOCK_SAMPLES * sizeof(int16_t));
+        file_object.write((byte *)queue1.readBuffer(), AUDIO_BLOCK_SAMPLES * sizeof(int16_t));
         queue1.freeBuffer();
-        recByteSaved += AUDIO_BLOCK_SAMPLES * sizeof(int16_t);
+        record_bytes_saved += AUDIO_BLOCK_SAMPLES * sizeof(int16_t);
         Serial.println("Flushed audio to file");
     }
-    
-    writeOutHeader();
 
-    fileObject.close(); // Close the file
+    write_out_wav_header();
+
+    file_object.close(); // Close the file
 
     Serial.println("Closed file");
     mode = Mode::Ready;
@@ -600,7 +680,7 @@ static void stopRecording(void) {
 /**
  * @brief Update WAV header with final filesize/datasize variables for writing to WAV file
  */
-static void writeOutHeader(void) {
+static void write_out_wav_header(void) {
     unsigned long ChunkSize = 0L;
     unsigned long Subchunk1Size = 16;
     unsigned int AudioFormat = 1;
@@ -614,72 +694,73 @@ static void writeOutHeader(void) {
     byte byte1, byte2, byte3, byte4;
 
     // NumSamples = (recByteSaved*8)/bitsPerSample/numChannels;
-    // Subchunk2Size = NumSamples*numChannels*bitsPerSample/8; 
+    // Subchunk2Size = NumSamples*numChannels*bitsPerSample/8;
     //                 number of samples x number of channels x number of bytes per sample
-    Subchunk2Size = recByteSaved - 42; // because we didn't make space for the header to start with! Lose 21 samples...
-    ChunkSize = Subchunk2Size + 34;    // was 36;
-    fileObject.seek(0);
-    fileObject.write("RIFF");
+    Subchunk2Size =
+        record_bytes_saved - 42;    // because we didn't make space for the header to start with! Lose 21 samples...
+    ChunkSize = Subchunk2Size + 34; // was 36;
+    file_object.seek(0);
+    file_object.write("RIFF");
     byte1 = ChunkSize & 0xff;
     byte2 = (ChunkSize >> 8) & 0xff;
     byte3 = (ChunkSize >> 16) & 0xff;
     byte4 = (ChunkSize >> 24) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
-    fileObject.write(byte3);
-    fileObject.write(byte4);
-    fileObject.write("WAVE");
-    fileObject.write("fmt ");
+    file_object.write(byte1);
+    file_object.write(byte2);
+    file_object.write(byte3);
+    file_object.write(byte4);
+    file_object.write("WAVE");
+    file_object.write("fmt ");
     byte1 = Subchunk1Size & 0xff;
     byte2 = (Subchunk1Size >> 8) & 0xff;
     byte3 = (Subchunk1Size >> 16) & 0xff;
     byte4 = (Subchunk1Size >> 24) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
-    fileObject.write(byte3);
-    fileObject.write(byte4);
+    file_object.write(byte1);
+    file_object.write(byte2);
+    file_object.write(byte3);
+    file_object.write(byte4);
     byte1 = AudioFormat & 0xff;
     byte2 = (AudioFormat >> 8) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
+    file_object.write(byte1);
+    file_object.write(byte2);
     byte1 = numChannels & 0xff;
     byte2 = (numChannels >> 8) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
+    file_object.write(byte1);
+    file_object.write(byte2);
     byte1 = sampleRate & 0xff;
     byte2 = (sampleRate >> 8) & 0xff;
     byte3 = (sampleRate >> 16) & 0xff;
     byte4 = (sampleRate >> 24) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
-    fileObject.write(byte3);
-    fileObject.write(byte4);
+    file_object.write(byte1);
+    file_object.write(byte2);
+    file_object.write(byte3);
+    file_object.write(byte4);
     byte1 = byteRate & 0xff;
     byte2 = (byteRate >> 8) & 0xff;
     byte3 = (byteRate >> 16) & 0xff;
     byte4 = (byteRate >> 24) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
-    fileObject.write(byte3);
-    fileObject.write(byte4);
+    file_object.write(byte1);
+    file_object.write(byte2);
+    file_object.write(byte3);
+    file_object.write(byte4);
     byte1 = blockAlign & 0xff;
     byte2 = (blockAlign >> 8) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
+    file_object.write(byte1);
+    file_object.write(byte2);
     byte1 = bitsPerSample & 0xff;
     byte2 = (bitsPerSample >> 8) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
-    fileObject.write("data");
+    file_object.write(byte1);
+    file_object.write(byte2);
+    file_object.write("data");
     byte1 = Subchunk2Size & 0xff;
     byte2 = (Subchunk2Size >> 8) & 0xff;
     byte3 = (Subchunk2Size >> 16) & 0xff;
     byte4 = (Subchunk2Size >> 24) & 0xff;
-    fileObject.write(byte1);
-    fileObject.write(byte2);
-    fileObject.write(byte3);
-    fileObject.write(byte4);
-    fileObject.close();
+    file_object.write(byte1);
+    file_object.write(byte2);
+    file_object.write(byte3);
+    file_object.write(byte4);
+    file_object.close();
     Serial.println("header written");
     Serial.print("Subchunk2: ");
     Serial.println(Subchunk2Size);
