@@ -81,7 +81,8 @@ Teensy audio board is connected to the Teensy board through the corresponding pi
 
 <figure>
   <img
-  src="./images/wiring-diagram-scale.png"
+  src="./images/wiring-diagram.png"
+  style="height: 600px;" 
   alt="Wiring Diagram">
 </figure>
 
