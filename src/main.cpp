@@ -58,6 +58,8 @@
 
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
 
+static const uint8_t morse_time_unit = 80; // Morse code time unit, length of a dot is 1 time unit
+
 /* Globals */
 AudioPlaySdWav playWaveFile;      // Play 44.1kHz 16-bit PCM .WAV files
 AudioInputI2S audioInput;         // I2S input from microphone on Teensy 4.0 Audio shield
@@ -455,7 +457,7 @@ static void end_beep(void) {
  */
 static void sos(void) {
     // Morse code timings
-    uint8_t dot = 80; // milliseconds
+    uint8_t dot = morse_time_unit; // milliseconds
     uint16_t dash = dot * 3;
     uint8_t symbol_space = dot;
     uint16_t letter_space = dot * 3;
@@ -512,7 +514,7 @@ static void sos(void) {
  */
 static void sd_card_error(void) {
     // Morse code timings
-    uint8_t dot = 80; // milliseconds
+    uint8_t dot = morse_time_unit; // milliseconds
     uint16_t dash = dot * 3;
     uint8_t symbol_space = dot;
     uint16_t letter_space = dot * 3;
