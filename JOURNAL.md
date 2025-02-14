@@ -21,7 +21,7 @@ Rotary Telephone:
 
 Won an eBay auction for a GPO No. 760 rotary telephone. In very good condition, rotary dial works perfectly bringing back nostalgic memories and it has an additional PRESS button.
 
-Started writing test code to confirm soldering was okay and that we can access the SD card on the Teensy (main board) and play WAV files via the audio board, all working as expected.
+Started writing test code to confirm soldering was okay and that we can access the SD card on the Teensy (main board) and play WAV files via the Teensy audio board, all working as expected.
 
 Took the phone to pieces; removed the two screws on the top where the handset rests and pulled the top off.  Identified all the wires; microphone, speaker, handset rocker switch, and the PRESS button switch.
 
@@ -56,7 +56,7 @@ void setup() {
 }
 ```
 
-Connected a new 3.3v button battery to the RTC ([VBAT + GND](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) next to the SD card on the Teeny) today (7th Feb) and wrote a test program to set and read the RTC.  All seems to work, will leave the battery connected and test to see how long it lasts, according to the [PRJC Teensy forum](https://forum.pjrc.com/index.php) about 1-2 months for the Teensy 4.
+Connected a new 3.3v button battery to the RTC ([VBAT + GND](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) next to the SD card on the Teensy) today (7th Feb) and wrote a test program to set and read the RTC.  All seems to work, will leave the battery connected and test to see how long it lasts, according to the [PRJC Teensy forum](https://forum.pjrc.com/index.php) about 1-2 months for the Teensy 4.
 
 Finally fixed the issue with no beep from the speaker, wasn't initalising the mixer section properly, RTFM!  Added RTC code to main program.
 
@@ -69,6 +69,10 @@ Electret microphones have arrived (via eBay for a couple of quid) and seem to gi
 Tidy up code a bit and start to document functions. Modified AUDIO_BLOCK_SAMPLES to 256 in /home/#########/.platformio/packages/framework-arduinoteensy/cores/teensy4/AudioStream.h as suggested by the audio guestbook post on the PRJC forum. Did a full clean and rebuild of project and changes are picked up - as this will probably be the only Teensy audio project I do changing the library is fine for now.
 
 Now working on phone handset logic and coding standards, attempting to keep as close to the [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) coding standards as I'm happy with.  For a bit of fun added morse code for error sounds, that way will be able to understand what the error is as we won't be able to see the Teensy LED with the phone back together. Will worry about PRESS button and dialer after happy with this logic.
+
+Now have a wiring diagram of all the connections thanks to my wife who is a digital artist amongst other talents.
+
+Have decided to write a test switch program to test the handset and press button logic, less to worry about with recording etc.
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
