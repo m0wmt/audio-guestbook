@@ -6,6 +6,8 @@
 #define PRESS_PIN 40        // PRESS switch
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
 
+static const uint8_t MORSE_TIME_UNIT = 80;      // Morse code time unit, length of a dot is 1 time unit
+
 // Globals
 AudioMixer4 mixer;                // Allows merging several inputs to same output
 AudioSynthWaveform synthWaveform; // To create the "beep" sound effect
@@ -81,8 +83,14 @@ void setup() {
     Serial.print("Max number of blocks used by Audio were: ");
     Serial.println(AudioMemoryUsageMax());
 
-    mode = READY;
+    // Is this an option?
+    // phone_handset.setPressedState(LOW); // or HIGH, need to work out which if this is an option
+    // phone_handset.pressed() // returns true if it was pressed
+    // phone_handset.ispressed() // returs true if currently pressed
+    // phone_handset.released() // returns true if if was released
 
+    
+    mode = READY;
     print_mode();
 
     // Reset the maximum reported by AudioMemoryUsageMax
@@ -212,6 +220,8 @@ static void wait(unsigned int milliseconds) {
         }
         if (press_button.fallingEdge()) {
             Serial.println("WAIT: PRESS button pressed");
+            // If pressed stop recording and wait for button press release?
+            // Set mode to PREDIALING?
         }
 
         if (phone_handset.risingEdge()) {
@@ -219,6 +229,8 @@ static void wait(unsigned int milliseconds) {
         }
         if (press_button.risingEdge()) {
             Serial.println("WAIT: PRESS button released");
+            // When released play dialing tone and wait for dial rotations?
+            // Set mode to DIALLING?
         }
     }
 }
