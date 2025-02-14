@@ -6,6 +6,8 @@
 #define PRESS_PIN 40        // PRESS switch
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
 
+// The UK dial tone combines 350 Hz and 450 Hz tones together creating a 100 Hz beat frequency.
+
 static const uint8_t morse_time_unit = 80;      // Morse code time unit, length of a dot is 1 time unit
 
 // Globals
