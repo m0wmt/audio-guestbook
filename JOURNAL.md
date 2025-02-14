@@ -70,9 +70,9 @@ Tidy up code a bit and start to document functions. Modified AUDIO_BLOCK_SAMPLES
 
 Now working on phone handset logic and coding standards, attempting to keep as close to the [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) coding standards as I'm happy with.  For a bit of fun added morse code for error sounds, that way will be able to understand what the error is as we won't be able to see the Teensy LED with the phone back together. Will worry about PRESS button and dialer after happy with this logic.
 
-Now have a wiring diagram of all the connections thanks to my wife who is a digital artist amongst other talents.
+Now have a wiring diagram of all the connections thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant) who is a digital artist amongst other talents.
 
-Have decided to write a test switch program to test the handset and press button logic, less to worry about with recording etc.
+Have decided to write a test switch program to work out the handset and press button logic, less to worry about with recording etc. Have seen a variety of ideas on the Teensy forum which I want to try out/test.
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
