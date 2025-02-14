@@ -72,7 +72,8 @@ Now working on phone handset logic and coding standards, attempting to keep as c
 
 Now have a wiring diagram of all the connections thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant) who is a digital artist amongst other talents.
 
-Have decided to write a test switch program to work out the handset and press button logic, less to worry about with recording etc. Have seen a variety of ideas on the Teensy forum which I want to try out/test.
+Have decided to write a test switch program to work out the handset and press button logic, less to worry about with recording etc. Have seen a variety of ideas on the Teensy forum which I want to try out/test. Button-test project now created (14th Feb) within the audio-guestbook project, updated the platformio.ini file so that I can easily compile either project inside VSCode. Have already found a logic error and expect to find others.
+
 
 Development Tasks:
 * Play .WAV file through handset speaker - Done.
