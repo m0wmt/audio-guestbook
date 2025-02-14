@@ -8,7 +8,7 @@
 
 // The UK dial tone combines 350 Hz and 450 Hz tones together creating a 100 Hz beat frequency.
 
-static const uint8_t morse_time_unit = 80;      // Morse code time unit, length of a dot is 1 time unit
+static const uint8_t morse_time_unit = 80; // Morse code time unit, length of a dot is 1 time unit in milliseconds
 
 // Globals
 AudioMixer4 mixer;                // Allows merging several inputs to same output
@@ -114,6 +114,9 @@ void setup() {
     // Play a sound to indicate system is online
     sos();
 
+    // Check handset is on phone, if not wait until it is.
+
+    
     Serial.print("Max number of blocks used by Audio were: ");
     Serial.println(AudioMemoryUsageMax());
 
@@ -134,7 +137,7 @@ void setup() {
 }
 
 void loop() {
-    // Read the buttons - can we move these to an interrupt?
+    // Read the buttons
     phone_handset.update();
     press_button.update();
 
@@ -142,6 +145,7 @@ void loop() {
     case ERROR:
         // Error!
         break;
+        
     case INITIALISING:
         // Program initialising - handset not it place etc. ?????
         break;
@@ -170,14 +174,14 @@ void loop() {
 
     case WAITGREETINGSTART:
         // Wait for the greeting message to start, can be a slight delay
-        delay(500);
+        delay(500); // delay here for debug purposes
         mode = GREETINGISPLAYING;
         print_mode();
         break;
 
     case GREETINGISPLAYING:
         // Wait for greeting to end OR handset to is replaced
-        delay(4000);
+        delay(4000); // delay here for debug purposes
         phone_handset.update();
         if (phone_handset.risingEdge()) {
             // Handset is replaced
@@ -208,14 +212,20 @@ void loop() {
 
     // Falling edge occurs when the handset is lifted --> GPO 706 telephone
     if (phone_handset.fallingEdge()) {
-        Serial.println("Handset lifted");
+        Serial.println("Handset lifted - should we ever get here?");
         mode = PROMPTING;
         print_mode();
     } else if (phone_handset.risingEdge()) { // Handset is replaced
         Serial.println("Handset replaced");
+        Serial.print("Current mode is: ");
+        print_mode();
+        
         if (mode == RECORDING) {
             stop_recording();
             end_beep();
+        // CHECK OTHER MODES AND STOP PLAYING WAV FiLE if PLAYiNG AND THEN SET To READY
+        // OR IF WE ARE IN DIALING MODE STOP WHAT WE WERE DOING WHICH COULD HAVE BEEN 
+        // PLAYING A WAV FILE.
         } else {
             Serial.println("Not recording so reset to ready");
             mode = READY;
@@ -227,9 +237,10 @@ void loop() {
     if (press_button.fallingEdge()) {
         Serial.println("PRESS button pressed");
         // delay(1000);
-        // start_recording();
+        // stop_recording();
     } else if (press_button.risingEdge()) { // PRESS button is released
         Serial.println("PRESS button released");
+        // PLAY DIALING TONE READY FOR PHONE NUMBER! NEED A NEW MODE HERE
         // delay(1000);
         // if (mode != READY) {
         //     stop_recording();
