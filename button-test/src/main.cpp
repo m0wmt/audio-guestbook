@@ -12,12 +12,14 @@ static const uint8_t morse_time_unit = 80;      // Morse code time unit, length 
 
 // Globals
 AudioMixer4 mixer;                // Allows merging several inputs to same output
-AudioSynthWaveform synthWaveform; // To create the "beep" sound effect
-AudioOutputI2S audioOutput;       // I2S output to Speaker Out on Teensy 4.0 Audio shield
-AudioConnection patchCord1(synthWaveform, 0, mixer, 0);
-AudioConnection patchCord2(mixer, 0, audioOutput, 0); // mixer output to speaker (L)
-AudioConnection patchCord3(mixer, 0, audioOutput, 1); // mixer output to speaker (R)
-AudioControlSGTL5000 audioShield;
+AudioSynthWaveform synth_waveform; // To create the "beep" sound effect
+AudioSynthWaveform synth_waveform2; // To create the 2nd "beep" sound effect
+AudioOutputI2S audio_output;       // I2S output to Speaker Out on Teensy 4.0 Audio shield
+AudioConnection patchCord1(synth_waveform, 0, mixer, 0);
+AudioConnection patchCord1(synth_waveform2, 0, mixer, 1);
+AudioConnection patchCord2(mixer, 0, audio_output, 0); // mixer output to speaker (L)
+AudioConnection patchCord3(mixer, 0, audio_output, 1); // mixer output to speaker (R)
+AudioControlSGTL5000 audio_shield;
 
 typedef enum { // Keep track of current state of the device
     ERROR,
@@ -49,6 +51,7 @@ static void continue_recording(void);
 static void stop_recording(void);
 static void print_mode(void); // for debugging only
 static void wait(unsigned int milliseconds);
+static void dial_tone(void);
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);    // Orange LED on board
@@ -73,8 +76,8 @@ void setup() {
     AudioMemory(10);
 
     // Comment these out if not using the audio adaptor board.
-    audioShield.enable();
-    audioShield.volume(0.6);
+    audio_shield.enable();
+    audio_shield.volume(0.6);
 
     mixer.gain(0, 1.0f);
     mixer.gain(1, 1.0f);
@@ -154,10 +157,10 @@ void loop() {
             print_mode();
         } else {
             // Play beep to let user know it's time to speak!
-            synthWaveform.frequency(600);
-            synthWaveform.amplitude(0.9);
+            synth_waveform.frequency(600);
+            synth_waveform.amplitude(0.9);
             wait(500);
-            synthWaveform.amplitude(0); // silence beep
+            synth_waveform.amplitude(0); // silence beep
             // Start the recording function
             start_recording();
         }
@@ -290,22 +293,22 @@ static void print_mode(void) {
  * @brief Play a beep to indicate end of recording.
  */
 static void end_beep(void) {
-    synthWaveform.frequency(523.25);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.frequency(523.25);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(250);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(250);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(250);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 }
 
 /**
@@ -320,47 +323,47 @@ static void sos(void) {
     uint16_t word_space = dot * 7;
 
     // 3 dots
-    synthWaveform.amplitude(beep_volume);
-    synthWaveform.frequency(800);
+    synth_waveform.amplitude(beep_volume);
+    synth_waveform.frequency(800);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(letter_space);
 
     // 3 dashes
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(letter_space);
 
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(word_space);
 }
@@ -410,4 +413,11 @@ static void stop_recording(void) {
     Serial.println("Stopped Recording");
     mode = READY;
     print_mode();
+}
+
+/**
+ * @brief Play the UK dial tone
+ */
+static void dial_tone(void) {
+    // play 2 tones at the same time
 }
