@@ -72,17 +72,19 @@ AudioConnection patchCord4(mixer, 0, audioOutput, 1); // mixer output to speaker
 AudioConnection patchCord5(audioInput, 0, queue1, 0); // mic input to queue (L)
 AudioControlSGTL5000 audioShield;
 
-enum Mode { // Keep track of current state of the device
-    Initialising,
-    Ready,
-    Prompting,
-    WaitHandsetToEar,
-    WaitGreetingStart,
-    GreetingIsPlaying,
-    Recording,
-    Playing
-};
-Mode mode = Mode::Initialising;
+typedef enum { // Keep track of current state of the device
+    ERROR,
+    INITIALISING,
+    READY,
+    PROMPTING,
+    WAITHANDSETTOEAR,
+    WAITGREETINGSTART,
+    GREETINGISPLAYING,
+    RECORDING,
+    PLAYING
+} button_mode_t;
+
+button_mode_t mode = INITIALISING;
 
 float beep_volume = 0.9f; // not too loud
 int led_state = LOW;      // LED state, LOW or HIGH
@@ -99,7 +101,7 @@ Bounce press_button = Bounce(PRESS_PIN, 40);
 /* Function prototypes */
 static void play_file(const char *filename);
 static void wait(unsigned int milliseconds);
-static void end_Beep(void);
+static void end_beep(void);
 static void sos(void);
 static void sd_card_error(void);
 static void blink_led(void);
@@ -166,10 +168,7 @@ void setup() {
     mixer.gain(0, 1.0f);
     mixer.gain(1, 1.0f);
 
-    // Play a beep to indicate system is online
-    // synthWaveform.begin(beep_volume, 440, WAVEFORM_SINE);
-    // wait(1000);
-    // synthWaveform.amplitude(0);
+    // Play a sound to indicate system is online
     sos();
 
     // Init SD CARD
@@ -209,7 +208,7 @@ void setup() {
     Serial.print("Max number of blocks used by Audio were: ");
     Serial.println(AudioMemoryUsageMax());
 
-    mode = Mode::Ready;
+    mode = READY;
 
     print_mode();
 
@@ -228,62 +227,71 @@ void loop() {
     press_button.update();
 
     switch (mode) {
-    case Mode::Initialising:
+    case ERROR:
+        // ERROR ?????
+        break;
+
+    case INITIALISING:
         // Program initialising - handset not it place etc. ?????
         break;
 
-    case Mode::Ready:
+    case READY:
         // Everything okay and ready to be used
         break;
 
-    case Mode::Prompting:
+    case PROMPTING:
         // Handset has been picked up, wait whilst it's put to the users ear
         wait_start = millis();
-        mode = Mode::WaitHandsetToEar;
+        mode = WAITHANDSETTOEAR;
+        print_mode();
         break;
 
-    case Mode::WaitHandsetToEar:
+    case WAITHANDSETTOEAR:
         // Waiting a second for the user to put the handset to their ear
         if (millis() - wait_start > 1000) // give them a second
         {
             // Play the greeting message "Record message after the beep"
             playWaveFile.play("greeting.wav");
-            mode = Mode::WaitGreetingStart;
+            mode = WAITGREETINGSTART;
+            print_mode()
         }
         break;
 
-    case Mode::WaitGreetingStart:
+    case WAITGREETINGSTART:
         // Wait for the greeting message to start, can be a slight delay
         if (playWaveFile.isPlaying()) {
-            mode = Mode::GreetingIsPlaying;
+            mode = GREETINGISPLAYING;
+            print_mode();
         }
         break;
 
-    case Mode::GreetingIsPlaying:
+    case GREETINGISPLAYING:
         // Wait for greeting to end OR handset to is replaced
         if (playWaveFile.isPlaying()) {
             // Check whether the handset is replaced
             phone_handset.update();
-            if (phone_handset.fallingEdge()) {
+            if (phone_handset.risingEdge()) {
                 // Handset is replaced
                 playWaveFile.stop();
-                mode = Mode::Ready;
+                mode = READY;
+                print_mode();
             }
         } else {
-            synthWaveform.frequency(440);
+            // Play beep to let user know it's time to speak!
+            synthWaveform.frequency(600);
             synthWaveform.amplitude(0.9);
-            wait(250);
+            wait(500);
             synthWaveform.amplitude(0); // silence beep
             // Start the recording function
             start_recording();
         }
         break;
 
-    case Mode::Recording:
+    case RECORDING:
         continue_recording();
         break;
 
-    case Mode::Playing:
+    case PLAYING:
         // Playing a recording
         break;
     }
@@ -293,13 +301,18 @@ void loop() {
     // Falling edge occurs when the handset is lifted --> GPO 706 telephone
     if (phone_handset.fallingEdge()) {
         Serial.println("Handset lifted");
-        delay(1000);
-        start_recording();
+        mode = PROMPTING;
+        print_mode();
     } else if (phone_handset.risingEdge()) { // Handset is replaced
         Serial.println("Handset replaced");
-        delay(1000);
-        stop_recording();
-        end_Beep();
+        if (mode == RECORDING) {
+            stop_recording();
+            end_beep();
+        } else {
+            Serial.println("Not recording so reset to ready");
+            mode = READY;
+            print_mode();
+        }
     }
 
     // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
@@ -310,7 +323,7 @@ void loop() {
     } else if (press_button.risingEdge()) { // PRESS button is released
         Serial.println("PRESS button released");
         delay(1000);
-        if (mode != Mode::Ready) {
+        if (mode != READY) {
             // stop_recording();
             // Serial.print("Max number of blocks used by Audio were: ");
             // Serial.println(AudioMemoryUsageMax());
@@ -325,7 +338,7 @@ void loop() {
  * @brief Play audio .wav file.
  */
 static void play_file(const char *filename) {
-    Serial.print("Playing file: ");
+    Serial.print("PLAYING file: ");
     Serial.println(filename);
 
     // Start playing the file.  This sketch continues to
@@ -347,36 +360,40 @@ static void print_mode(void) {
     Serial.print("Mode switched to: ");
 
     switch (mode) {
-    case Mode::Initialising:
-        Serial.println(" Initialising");
+    case ERROR:
+        Serial.println(" ERROR");
         break;
 
-    case Mode::Ready:
-        Serial.println(" Ready");
+        case INITIALISING:
+            Serial.println(" INITIALISING");
+            break;
+
+    case READY:
+        Serial.println(" READY");
         break;
 
-    case Mode::Prompting:
-        Serial.println(" Prompting");
+    case PROMPTING:
+        Serial.println(" PROMPTING");
         break;
 
-    case Mode::WaitHandsetToEar:
-        Serial.println(" WaitHandsetToEar");
+    case WAITHANDSETTOEAR:
+        Serial.println(" WAITHANDSETTOEAR");
         break;
 
-    case Mode::WaitGreetingStart:
-        Serial.println(" WaitGreetingStart");
+    case WAITGREETINGSTART:
+        Serial.println(" WAITGREETINGSTART");
         break;
 
-    case Mode::GreetingIsPlaying:
-        Serial.println(" GreetingIsPlaying");
+    case GREETINGISPLAYING:
+        Serial.println(" GREETINGISPLAYING");
         break;
 
-    case Mode::Recording:
-        Serial.println(" Recording");
+    case RECORDING:
+        Serial.println(" RECORDING");
         break;
 
-    case Mode::Playing:
-        Serial.println(" Playing");
+    case PLAYING:
+        Serial.println(" PLAYING");
         break;
 
     default:
@@ -414,7 +431,7 @@ static void wait(unsigned int milliseconds) {
 /**
  * @brief Play a beep to indicate end of recording.
  */
-static void end_Beep(void) {
+static void end_beep(void) {
     synthWaveform.frequency(523.25);
     synthWaveform.amplitude(beep_volume);
     wait(250);
@@ -616,10 +633,10 @@ static void start_recording(void) {
     file_object = SD.open(filename, FILE_WRITE);
     Serial.println("Creating file.");
     if (file_object) {
-        Serial.print("Recording to ");
+        Serial.print("RECORDING to ");
         Serial.println(filename);
         queue1.begin();
-        mode = Mode::Recording;
+        mode = RECORDING;
         print_mode();
         record_bytes_saved = 0L;
     } else {
@@ -673,7 +690,7 @@ static void stop_recording(void) {
     file_object.close(); // Close the file
 
     Serial.println("Closed file");
-    mode = Mode::Ready;
+    mode = READY;
     print_mode();
 }
 
