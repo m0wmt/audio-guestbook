@@ -15,10 +15,10 @@ AudioMixer4 mixer;                // Allows merging several inputs to same outpu
 AudioSynthWaveform synth_waveform; // To create the "beep" sound effect
 AudioSynthWaveform synth_waveform2; // To create the 2nd "beep" sound effect
 AudioOutputI2S audio_output;       // I2S output to Speaker Out on Teensy 4.0 Audio shield
-AudioConnection patchCord1(synth_waveform, 0, mixer, 0);
-AudioConnection patchCord2(synth_waveform2, 0, mixer, 1);
-AudioConnection patchCord3(mixer, 0, audio_output, 0); // mixer output to speaker (L)
-AudioConnection patchCord4(mixer, 0, audio_output, 1); // mixer output to speaker (R)
+AudioConnection connection_one(synth_waveform, 0, mixer, 0);
+AudioConnection connection_two(synth_waveform2, 0, mixer, 1);
+AudioConnection connection_three(mixer, 0, audio_output, 0); // mixer output to speaker (L)
+AudioConnection connection_four(mixer, 0, audio_output, 1); // mixer output to speaker (R)
 AudioControlSGTL5000 audio_shield;
 
 typedef enum { // Keep track of current state of the device
