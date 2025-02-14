@@ -421,3 +421,269 @@ static void stop_recording(void) {
 static void dial_tone(void) {
     // play 2 tones at the same time
 }
+
+/**
+ * @brief Play morse code letter a (.-)
+ */
+static void a(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    synth_waveform.frequency(800);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    
+    // 1 dash
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter b (-...)
+ */
+static void b(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 1 dash
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 3 dots
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+}
+
+/**
+ * @brief Play morse code letter c (-.-.)
+ */
+static void c(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 1 dash
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 1 dash
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    
+}
+
+/**
+ * @brief Play morse code letter d (-..)
+ */
+static void d(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 1 dash
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 2 dots
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter e (.)
+ */
+static void e(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter f (..-.)
+ */
+static void f(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 2 dots
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 1 dash
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter g (--.)
+ */
+static void g(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 2 dashes
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter h (....)
+ */
+static void h(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 4 dots
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter i (..)
+ */
+static void i(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 2 dots
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
+/**
+ * @brief Play morse code letter j (.---)
+ */
+static void j(void) {
+    // Morse code timings
+    uint8_t dot = morse_time_unit; // milliseconds
+    uint16_t dash = dot * 3;
+    uint8_t symbol_space = dot;
+
+    // 1 dot
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+
+    // 3 dashes
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dash);
+    synth_waveform.amplitude(0);
+    wait(symbol_space);
+}
+
