@@ -16,6 +16,11 @@ Using the [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_s
 ### Audio Library
 As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted that increasing the number of audio samples in an "audio block" from 128 to 256 mean less writes to the SD card. Audio updates run every 5.8ms rather than the standard 2.9ms, with the consequence that an SD write can take nearly 12ms before an update is "lost".
 
+### Support Projects
+- rtc-test Quick test of the RTC with a button battery.
+- button-test Poject to test the logic of the audio guestbook without having to worry about messing up the main project.
+- monitor An ESP32 project (yet to be created) that will be used to monitor the status of the audio guestbook via wi-fi. Will only be available if the venue has mains power due to the power demands of wi-fi.
+
 ## Requirements
 - Power switch to turn recorder on/off
 - Start recording when handset is lifted
