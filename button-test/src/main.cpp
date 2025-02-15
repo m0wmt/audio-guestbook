@@ -26,6 +26,7 @@ typedef enum { // Keep track of current state of the device
     INITIALISING,
     READY,
     PROMPTING,
+    RECORDMESSAGEPROMPT,
     WAITHANDSETTOEAR,
     WAITGREETINGSTART,
     GREETINGISPLAYING,
@@ -161,6 +162,15 @@ void loop() {
         print_mode();
         break;
 
+        case RECORDMESSAGEPROMPT:
+            // Play message to record after the beep
+            wait(1000);   // Wait a second for handset to be brought up to ear
+            r(); // Play letter to se if we got the timing right?
+            // Check if handset has been replaced
+            mode = RECORDMESSAGEPROMPT;
+            print_mode();
+            break;
+        
     case WAITHANDSETTOEAR:
         // Waiting a second for the user to put the handset to their ear
         if (millis() - wait_start > 1000) // give them a second
