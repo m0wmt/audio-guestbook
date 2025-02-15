@@ -71,7 +71,7 @@ dial_tone_state_t dial_tone = OFF;
 float beep_volume = 0.9f; // not too loud
 int led_state = LOW;      // LED state, LOW or HIGH
 uint32_t wait_start = 0;
-elapsedMillis recording_timer = 0; // Length of recording timer to prevent long messages
+elapsedMillis recording_timer = 0; // Recording timer to prevent long messages
 
 // Debounce on switches
 Bounce phone_handset = Bounce(HANDSET_PIN, 40);
@@ -207,9 +207,8 @@ void loop() {
 
     switch (mode) {
     case ERROR:
-        // Error!
-        if (phone_handset.risingEdge()) { // Phone was left off hook for too long to get here
-            // Phone replaced
+        // Error - Phone was left off hook for too long to get here
+        if (phone_handset.risingEdge()) { // Handset has been replaced
             dialing_tone(OFF);
             mode = READY;
             print_mode();
@@ -252,7 +251,7 @@ void loop() {
             // Play beep to let user know to start speaking
             synth_waveform.frequency(650);
             synth_waveform.amplitude(0.9);
-            delay(800);
+            delay(750);
             synth_waveform.amplitude(0); // silence beep
 
             start_recording();
@@ -282,18 +281,16 @@ void loop() {
     case RECORDING:
         // Has the handset been replaced or have we exceeded the recording limit
         // ######## NEED A WARNING TONE THAT MESSAGE IS COMING TO THE MAX LENGTH ALLOWED ##############
-        if (phone_handset.risingEdge() || recording_timer >= max_recording_time) {
+        if (phone_handset.risingEdge() {
             stop_recording();
             end_beep();
-            if (recording_timer >= max_recording_time) {
-                Serial.println("MAX recording time exceeded!");
-                dialing_tone(ON);
-                mode = ERROR;
-                print_mode();
-            } else {
-                mode = READY;
-                print_mode();
-            }
+            mode = READY;
+            print_mode();
+        } else if (recording_timer >= max_recording_time) {
+            Serial.println("MAX recording time exceeded!");
+            dialing_tone(ON);
+            mode = ERROR;
+            print_mode();
         } else {
             continue_recording();
         }
@@ -551,7 +548,7 @@ static void start_recording(void) {
     mode = RECORDING;
     print_mode();
 
-    recording_timer = 0;
+    recording_timer = 0; // Reset timer to capture long recordings
     // NEED TO ADD AN ERROR HERE FOR TESTING
 }
 
