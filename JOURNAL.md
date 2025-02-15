@@ -72,19 +72,21 @@ Now working on phone handset logic and coding standards, attempting to keep as c
 
 Now have a wiring diagram of all the connections thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant) who is a digital artist amongst other talents.
 
-Have decided to write a test switch program to work out the handset and press button logic, less to worry about with recording etc. Have seen a variety of ideas on the Teensy forum which I want to try out/test. Button-test project now created (14th Feb) within the audio-guestbook project, updated the platformio.ini file so that I can easily compile either project inside VSCode. Have already found a logic error and expect to find others.
+Have decided to write a test button (button-test) program to work out the handset and press button logic, less to worry about with recording etc. Have seen a variety of ideas on the Teensy forum which I want to try out/test. Button-test project now created (14th Feb) within the audio-guestbook project, updated the platformio.ini file so that I can easily compile either project inside VSCode. Have already found a logic error and expect to find others.
+
+Modified logic, using less switch options in the main loop and removed looking at buttons during the wait() function. Need to sort out too long recordings (need to confirm how long a message may be), not erroring for some reason, had to stop for the day before I could fix it.
 
 
-Development Tasks:
+### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
 * RTC using a button battery - Done.
 * Record message via handset speaker.  Need to wait for right angle connectors to arrive before doing the MIC, only way to test that will be to speak in to it! - Partially done.
 * Play sound when program starts up - Done.
-* Play message to user to record after the beep.
+* Play message to user to record after the beep = Partially done.
 * Download Audacity to the PC for recording WAV files and playing them back - Done and tested.
-* Program startup logic, handset not on phone, no SD card etc.
-* Program logic of handset/PRESS button.
+* Program startup logic, handset not on phone, no SD card etc. No SD card done.
+* Program logic of handset/PRESS button - In progress.
 * Handle possible errors.
 * Can we use the telephone dial to carry out actions?
 * Use [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) C coding standards - In progress.
