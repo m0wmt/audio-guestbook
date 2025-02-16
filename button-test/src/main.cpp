@@ -240,6 +240,8 @@ void loop() {
             phone_handset.update();
             if (phone_handset.risingEdge()) {
                 wave_file.stop();
+                Serial.println("In message prompt, set mode to ready");
+                delay(500); // Time for play back to stop
                 mode = READY;
                 print_mode();
             }
@@ -287,7 +289,8 @@ void loop() {
             mode = READY;
             print_mode();
         } else if (recording_timer >= max_recording_time) {
-            Serial.println("MAX recording time exceeded!");
+            Serial.print("MAX recording time exceeded: ");
+            Serial.println(recording_timer);
             dialing_tone(ON);
             mode = ERROR;
             print_mode();
