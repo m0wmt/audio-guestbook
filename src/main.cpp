@@ -81,7 +81,7 @@ typedef enum { // Keep track of current state of the device
     PROMPTING,
     WAITHANDSETTOEAR,
     WAITGREETINGSTART,
-    GREETINGISPLAYING,
+    RECORDMESSAGEISPLAYING,
     RECORDING,
     PLAYING
 } button_mode_t;
@@ -262,12 +262,12 @@ void loop() {
     case WAITGREETINGSTART:
         // Wait for the greeting message to start, can be a slight delay
         if (playWaveFile.isPlaying()) {
-            mode = GREETINGISPLAYING;
+            mode = RECORDMESSAGEISPLAYING;
             print_mode();
         }
         break;
 
-    case GREETINGISPLAYING:
+    case RECORDMESSAGEISPLAYING:
         // Wait for greeting to end OR handset to is replaced
         if (playWaveFile.isPlaying()) {
             // Check whether the handset is replaced
@@ -386,7 +386,7 @@ static void print_mode(void) {
         Serial.println(" WAITGREETINGSTART");
         break;
 
-    case GREETINGISPLAYING:
+    case RECORDMESSAGEISPLAYING:
         Serial.println(" GREETINGISPLAYING");
         break;
 
