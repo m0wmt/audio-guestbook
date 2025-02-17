@@ -30,7 +30,7 @@
 #define SDCARD_SCK_PIN 13
 
 static const uint8_t morse_time_unit = 80; // Morse code time unit, length of a dot is 1 time unit in milliseconds
-static const uint32_t max_recording_time = 30'000; // Recording time limit (milliseconds)
+static const uint32_t max_recording_time = 10'000; // Recording time limit (milliseconds)
 // 60000 = 1 min
 // 120000 =  2 mins
 // 240000 = 4 mins
@@ -155,9 +155,8 @@ void setup() {
         // Stop here, and print a message repetitively, this will cause the LED to stay lit (not that anyone can see
         // this!) and the beep tone to carry on playing to indicate an error.
         while (1) {
-            // Serial.println("Unable to access the SD card");
-            sos();
-            delay(3000);
+            Serial.println("Unable to access the SD card");
+            delay(5000);
         }
     } else {
         Serial.println("SD card present");
@@ -212,6 +211,9 @@ void loop() {
             dialing_tone(OFF);
             mode = READY;
             print_mode();
+        } else {
+            end_beep();
+            delay(3000);
         }
         break;
 
@@ -283,7 +285,7 @@ void loop() {
     case RECORDING:
         // Has the handset been replaced or have we exceeded the recording limit
         // ######## NEED A WARNING TONE THAT MESSAGE IS COMING TO THE MAX LENGTH ALLOWED ##############
-        if (phone_handset.risingEdge() {
+        if (phone_handset.risingEdge()) {
             stop_recording();
             end_beep();
             mode = READY;
@@ -291,7 +293,15 @@ void loop() {
         } else if (recording_timer >= max_recording_time) {
             Serial.print("MAX recording time exceeded: ");
             Serial.println(recording_timer);
-            dialing_tone(ON);
+            
+            stop_recording();
+            delay(1000);
+
+            sos();
+
+            //            dialing_tone(ON);
+            //            delay(1000);
+
             mode = ERROR;
             print_mode();
         } else {
@@ -479,6 +489,7 @@ static void sos(void) {
     uint16_t word_space = dot * 7;
 
     // 3 dots
+    wait(symbol_space);
     synth_waveform.amplitude(beep_volume);
     synth_waveform.frequency(800);
     wait(dot);
