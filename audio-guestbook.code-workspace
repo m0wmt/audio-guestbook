@@ -6,6 +6,10 @@
 		{
 			"name": "button-test",
 			"path": "button-test"
+		},
+		{
+			"name": "admin-monitor",
+			"path": "admin-monitor"
 		}
 	],
 	"settings": {
