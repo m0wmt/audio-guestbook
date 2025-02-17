@@ -19,7 +19,7 @@ As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted 
 ### Support Projects
 - rtc-test Quick test of the RTC with a button battery.
 - button-test Poject to test the logic of the audio guestbook without having to worry about messing up the main project.
-- monitor An ESP32 project (yet to be created) that will be used to monitor the status of the audio guestbook via wi-fi. Will only be available if the venue has mains power due to the power demands of wi-fi.
+- admin-monitor An ESP32 project (yet to be created) that will be used to monitor the status of the audio guestbook via wi-fi. Will only be available if the venue has mains power due to the power demands of wi-fi draining a battery too quickly.
 
 ## Requirements
 - Power switch to turn recorder on/off
