@@ -85,18 +85,18 @@ As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted 
 </figure>
 
 <figure>
-  <figcaption>Phone terminal connections</figcaption>
-  <img
-  src="./images/connections.jpeg"
-  alt="Phone terminal connections">
-</figure>
-
-<figure>
   <figcaption>Telephone Microphone</figcaption>
   <img
   src="./images/gpo706-mic.JPEG"
   style="width: 400px;" 
   alt="Telephone Microphone">
+</figure>
+
+<figure>
+  <figcaption>Electret Microphone</figcaption>
+  <img
+  src="./images/electric-mic.jpg"
+  alt="Electret Microphone">
 </figure>
 
 <figure>
