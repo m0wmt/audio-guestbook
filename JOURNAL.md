@@ -76,6 +76,10 @@ Have decided to write a test button (button-test) program to work out the handse
 
 Modified logic, using less switch options in the main loop and removed looking at buttons during the wait() function. Need to sort out too long recordings (need to confirm how long a message may be), not erroring for some reason, had to stop for the day before I could fix it.
 
+Still working on recording logic/errors but for a bit of variety I decided to model a microphone housing for the electret microphone to replace the telephones original microphone. This is my first proper attempt at 3D modelling and I used [Onshape](https://www.onshape.com/en/) because it can be used on a variety of platforms and is free for hobbyists. First rendition looks good, now need to wait for my 3D print manufacturer to print it. An .stl of the model is available in the notes directory of this repository, I will put it on thingiverse once I'm happy with it.
+
+3D model of replacement microphone:
+![3D model](./images/gpo706-3d-mic.jpg)
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
