@@ -78,9 +78,7 @@ Modified logic, using less switch options in the main loop and removed looking a
 
 Still working on recording logic/errors but for a bit of variety I decided to model a microphone housing for the electret microphone to replace the telephones original microphone. This is my first proper attempt at 3D modelling and I used [Onshape](https://www.onshape.com/en/) because it can be used on a variety of platforms and is free for hobbyists. First rendition looks good, now need to wait for my 3D print manufacturer to print it. An .stl of the model is available in the notes directory of this repository, I will put it on thingiverse once I'm happy with it.
 
-3D model of replacement microphone:
-<img src="./images/gpo706-3d-mic.jpg" alt="3D Model" width="300">
-![3D model](./images/gpo706-3d-mic.jpg =300x)
+3D model of replacement microphone: <img src="./images/gpo706-3d-mic.jpg" alt="3D Model" width="300">
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
