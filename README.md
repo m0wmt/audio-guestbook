@@ -47,6 +47,7 @@ As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted 
 - Switch
 - ESP32-S3 Mini
 - [Electret](https://en.wikipedia.org/wiki/Electret_microphone) microphone
+- [My 3D model](https://github.com/m0wmt/audio-guestbook/blob/main/notes/GPO706-Electret-Mic.stl) (.stl) of electret microphone housing
 
 <figure>
   <figcaption>Teensy 4.1</figcaption>
@@ -84,11 +85,26 @@ As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted 
 </figure>
 
 <figure>
-  <figcaption>Electret Microphone</figcaption>
+  <figcaption>Phone terminal connections</figcaption>
   <img
-  src="./images/electric-mic.jpg"
-  style="width: 350px;" 
-  alt="Electret Microphone">
+  src="./images/connections.jpeg"
+  alt="Phone terminal connections">
+</figure>
+
+<figure>
+  <figcaption>Telephone Microphone</figcaption>
+  <img
+  src="./images/gpo706-mic.JPEG"
+  style="width: 400px;" 
+  alt="Telephone Microphone">
+</figure>
+
+<figure>
+  <figcaption>3D rendering of replacement microphone housing</figcaption>
+  <img
+  src="./images/gpo706-3d-mic.jpg"
+  style="width: 400px;" 
+  alt="3D rendering of replacement microphone housing">
 </figure>
 
 ## Coding Journal
