@@ -82,7 +82,7 @@ Still working on recording logic/errors but for a bit of variety I decided to mo
 
 Have too long recording sorted. Sound a tick every second for the last 15 seconds and then end the recording. Will need a leaflet letting people know how long they can have to record a message. If phone is left off the hook for some reason morse code (SOS) will play via the handset speaker until the handset is replaced.
 
-Think I have all the recording logic sorted now, just needs lots of testing to make sure!! 
+Think I have all the recording logic sorted now, just needs lots of testing to make sure!!  Have now copied relevant code from the button-test project to the main project. One issue I am having during testing is that when I play a beep to warn the user that their time is running out that appears on the recording as well - no idea why. Need to try the electret microphone plugged directly into the audio board and some headphones I have lying around to see if there is any crossover via the phone connections.
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
