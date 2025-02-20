@@ -53,40 +53,50 @@
 #define SDCARD_MOSI_PIN 11
 #define SDCARD_SCK_PIN 13
 
-#define HANDSET_PIN 41 // Handset switch
-#define PRESS_PIN 40   // PRESS switch
-
+#define HANDSET_PIN 41      // Handset switch
+#define PRESS_PIN 40        // PRESS switch
+#define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
 
-static const uint8_t morse_time_unit = 80; // Morse code time unit, length of a dot is 1 time unit
+static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
+static const uint32_t max_recording_time = 30'000; // Recording time limit (milliseconds)
+// 60000 = 1 min
+// 120000 =  2 mins
+// 240000 = 4 mins
 
 /* Globals */
-AudioPlaySdWav playWaveFile;      // Play 44.1kHz 16-bit PCM .WAV files
-AudioInputI2S audioInput;         // I2S input from microphone on Teensy 4.0 Audio shield
-AudioMixer4 mixer;                // Allows merging several inputs to same output
-AudioRecordQueue queue1;          // Create an audio buffer in memory before saving to SD
-AudioSynthWaveform synthWaveform; // To create the "beep" sound effect
-AudioOutputI2S audioOutput;       // I2S output to Speaker Out on Teensy 4.0 Audio shield
-AudioConnection patchCord1(synthWaveform, 0, mixer, 0);
-AudioConnection patchCord2(playWaveFile, 0, mixer, 1);
-AudioConnection patchCord3(mixer, 0, audioOutput, 0); // mixer output to speaker (L)
-AudioConnection patchCord4(mixer, 0, audioOutput, 1); // mixer output to speaker (R)
-AudioConnection patchCord5(audioInput, 0, queue1, 0); // mic input to queue (L)
-AudioControlSGTL5000 audioShield;
+AudioPlaySdWav wave_file;              // Play 44.1kHz 16-bit PCM .WAV files
+AudioInputI2S audioInput;              // I2S input from microphone on Teensy 4.0 Audio shield
+AudioMixer4 mixer;                     // Allows merging several inputs to same output
+AudioRecordQueue queue1;               // Create an audio buffer in memory before saving to SD
+AudioSynthWaveform synth_waveform;     // To create the "beep" sound effect
+AudioSynthWaveform synth_waveform_350; // To create UK dial tone
+AudioSynthWaveform synth_waveform_450; // To create UK dial tone
+AudioOutputI2S audio_output;           // I2S output to Speaker Out on Teensy 4.0 Audio shield
+AudioConnection patchCord1(synth_waveform, 0, mixer, 0);
+AudioConnection patchCord2(wave_file, 0, mixer, 1);
+AudioConnection patchCord3(mixer, 0, audio_output, 0); // mixer output to speaker (L)
+AudioConnection patchCord4(mixer, 0, audio_output, 1); // mixer output to speaker (R)
+AudioConnection patchCord5(synth_waveform_350, 0, mixer, 2);
+AudioConnection patchCord6(synth_waveform_450, 0, mixer, 3);
+AudioConnection patchCord7(audioInput, 0, queue1, 0); // mic input to queue (L)
+AudioControlSGTL5000 audio_shield;
 
 typedef enum { // Keep track of current state of the device
     ERROR,
     INITIALISING,
     READY,
-    PROMPTING,
-    WAITHANDSETTOEAR,
-    WAITGREETINGSTART,
-    RECORDMESSAGEISPLAYING,
+    RECORDMESSAGEPROMPT,
     RECORDING,
     PLAYING
 } button_mode_t;
-
 button_mode_t mode = INITIALISING;
+
+typedef enum { // Keep track of dial tone state
+    OFF,
+    ON
+} dial_tone_state_t;
+dial_tone_state_t dial_tone = OFF;
 
 float beep_volume = 0.9f; // not too loud
 int led_state = LOW;      // LED state, LOW or HIGH
@@ -95,6 +105,7 @@ char filename[15]; // Filename to save audio recording on SD card
 File file_object;  // The file object itself
 unsigned long record_bytes_saved = 0L;
 uint32_t wait_start = 0;
+elapsedMillis recording_timer = 0; // Recording timer to prevent long messages
 
 // Debounce on switches
 Bounce phone_handset = Bounce(HANDSET_PIN, 40);
@@ -111,11 +122,13 @@ static time_t get_teensy_three_time(void);
 static void print_digits(int digits);
 static void digital_clock_display(void);
 static void print_time(void);
+static void sound_warning(void);
 static void start_recording(void);
 static void continue_recording(void);
 static void stop_recording(void);
 static void write_out_wav_header(void);
 static void print_mode(void); // for debugging only
+static void dialing_tone(dial_tone_state_t on_or_off);
 
 /**
  * @brief Program setup.
@@ -159,19 +172,19 @@ void setup() {
     AudioMemory(80);
 
     // Comment these out if not using the audio adaptor board.
-    audioShield.enable();
-    audioShield.volume(0.6);
+    audio_shield.enable();
+    audio_shield.volume(0.6);
 
     // Define which input on the audio shield to use (AUDIO_INPUT_LINEIN /
     // AUDIO_INPUT_MIC)
-    audioShield.inputSelect(AUDIO_INPUT_MIC);
-    audioShield.micGain(40); // gain in dB from 0 to 63
+    audio_shield.inputSelect(AUDIO_INPUT_MIC);
+    audio_shield.micGain(40); // gain in dB from 0 to 63
 
     mixer.gain(0, 1.0f);
     mixer.gain(1, 1.0f);
 
     // Play a sound to indicate system is online
-    sos();
+    dialing_tone(ON);
 
     // Init SD CARD
     SPI.setMOSI(SDCARD_MOSI_PIN);
@@ -180,9 +193,7 @@ void setup() {
         // Stop here, and print a message repetitively, this will cause the LED to stay lit (not that anyone can see
         // this!) and the beep tone to carry on playing to indicate an error.
         while (!b_sd_card) {
-            //Serial.println("Unable to access the SD card");
             delay(500);
-            //sos();
             sd_card_error();
             if (SD.begin(SDCARD_CS_PIN)) {
                 b_sd_card = true;
@@ -211,8 +222,9 @@ void setup() {
     Serial.println(AudioMemoryUsageMax());
 
     mode = READY;
-
     print_mode();
+
+    dialing_tone(OFF);
 
     // Reset the maximum reported by AudioMemoryUsageMax
     AudioMemoryUsageMaxReset();
@@ -230,7 +242,15 @@ void loop() {
 
     switch (mode) {
     case ERROR:
-        // ERROR ?????
+        // Error - Phone was left off hook for too long to get here
+        if (phone_handset.risingEdge()) { // Handset has been replaced
+            dialing_tone(OFF);
+            mode = READY;
+            print_mode();
+        } else {
+            sos();
+            delay(3000);
+        }
         break;
 
     case INITIALISING:
@@ -239,82 +259,80 @@ void loop() {
 
     case READY:
         // Everything okay and ready to be used
-        break;
-
-    case PROMPTING:
-        // Handset has been picked up, wait whilst it's put to the users ear
-        wait_start = millis();
-        mode = WAITHANDSETTOEAR;
-        print_mode();
-        break;
-
-    case WAITHANDSETTOEAR:
-        // Waiting a second for the user to put the handset to their ear
-        if (millis() - wait_start > 1000) // give them a second
-        {
-            // Play the greeting message "Record message after the beep"
-            playWaveFile.play("greeting.wav");
-            mode = WAITGREETINGSTART;
-            print_mode()
-        }
-        break;
-
-    case WAITGREETINGSTART:
-        // Wait for the greeting message to start, can be a slight delay
-        if (playWaveFile.isPlaying()) {
-            mode = RECORDMESSAGEISPLAYING;
+        // Falling edge occurs when the handset is lifted --> GPO 706 telephone
+        if (phone_handset.fallingEdge()) {
+            Serial.println("Handset lifted");
+            mode = RECORDMESSAGEPROMPT;
             print_mode();
         }
+
         break;
 
-    case RECORDMESSAGEISPLAYING:
-        // Wait for greeting to end OR handset to is replaced
-        if (playWaveFile.isPlaying()) {
-            // Check whether the handset is replaced
+    case RECORDMESSAGEPROMPT:
+        // Play message to record after the beep
+        delay(1000); // Wait a second for handset to be brought up to ear
+        Serial.println("Play record message .wav file...");
+        wave_file.play("record.wav");
+        while (!wave_file.isStopped()) {
+            // Check if handset has been replaced
             phone_handset.update();
             if (phone_handset.risingEdge()) {
-                // Handset is replaced
-                playWaveFile.stop();
+                wave_file.stop();
+                Serial.println("In message prompt, set mode to ready");
+                delay(500); // Time for play back to stop
                 mode = READY;
                 print_mode();
             }
-        } else {
-            // Play beep to let user know it's time to speak!
-            synthWaveform.frequency(600);
-            synthWaveform.amplitude(0.9);
-            wait(500);
-            synthWaveform.amplitude(0); // silence beep
-            // Start the recording function
+        }
+
+        // Check handset was not replaced above
+        if (mode == RECORDMESSAGEPROMPT) {
+            Serial.println("Record message .wav file ended");
+            // Play beep to let user know to start speaking
+            synth_waveform.frequency(650);
+            synth_waveform.amplitude(0.9);
+            delay(750);
+            synth_waveform.amplitude(0); // silence beep
+
             start_recording();
         }
         break;
 
     case RECORDING:
-        continue_recording();
+        // Has the handset been replaced or have we exceeded the recording limit
+        // ######## NEED A WARNING TONE THAT MESSAGE IS COMING TO THE MAX LENGTH ALLOWED ##############
+        if (phone_handset.risingEdge()) {
+            stop_recording();
+            end_beep();
+            mode = READY;
+            print_mode();
+        } else if (recording_timer >= max_recording_time) {
+            Serial.print("MAX recording time exceeded: ");
+            Serial.println(recording_timer);
+
+            stop_recording();
+
+            // Play very short warning beep to indicate THE END
+            synth_waveform.frequency(700);
+            synth_waveform.amplitude(0.9);
+            delay(1000);
+            synth_waveform.amplitude(0); // silence beep
+
+            mode = ERROR;
+            print_mode();
+        } else {
+            // Check for coming near to end of max recording, sound a beep 15 seconds before the end
+            if (recording_timer > (max_recording_time - 15'000)) {
+                sound_warning();
+            }
+
+            continue_recording();
+        }
         break;
 
     case PLAYING:
         // Playing a recording
         break;
-    }
-
-    /* Check HANDSET and PRESS button movement and action */
-
-    // Falling edge occurs when the handset is lifted --> GPO 706 telephone
-    if (phone_handset.fallingEdge()) {
-        Serial.println("Handset lifted");
-        mode = PROMPTING;
-        print_mode();
-    } else if (phone_handset.risingEdge()) { // Handset is replaced
-        Serial.println("Handset replaced");
-        if (mode == RECORDING) {
-            stop_recording();
-            end_beep();
-        } else {
-            Serial.println("Not recording so reset to ready");
-            mode = READY;
-            print_mode();
-        }
     }
 
     // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
@@ -345,13 +363,13 @@ static void play_file(const char *filename) {
 
     // Start playing the file.  This sketch continues to
     // run while the file plays.
-    playWaveFile.play(filename);
+    wave_file.play(filename);
 
     // A brief delay for the library read WAV info
     delay(25);
 
     // Simply wait for the file to finish playing.
-    while (playWaveFile.isPlaying()) {
+    while (wave_file.isPlaying()) {
     }
 }
 
@@ -366,28 +384,16 @@ static void print_mode(void) {
         Serial.println(" ERROR");
         break;
 
-        case INITIALISING:
-            Serial.println(" INITIALISING");
-            break;
+    case INITIALISING:
+        Serial.println(" INITIALISING");
+        break;
 
     case READY:
         Serial.println(" READY");
         break;
 
-    case PROMPTING:
-        Serial.println(" PROMPTING");
-        break;
-
-    case WAITHANDSETTOEAR:
-        Serial.println(" WAITHANDSETTOEAR");
-        break;
-
-    case WAITGREETINGSTART:
-        Serial.println(" WAITGREETINGSTART");
-        break;
-
-    case RECORDMESSAGEISPLAYING:
-        Serial.println(" GREETINGISPLAYING");
+    case RECORDMESSAGEPROMPT:
+        Serial.println(" RECORDMESSAGEPROMPT");
         break;
 
     case RECORDING:
@@ -399,7 +405,7 @@ static void print_mode(void) {
         break;
 
     default:
-        Serial.println(" Undefined");
+        Serial.println(" UNDEFINED");
         break;
     }
 }
@@ -411,22 +417,50 @@ static void print_mode(void) {
 static void wait(unsigned int milliseconds) {
     elapsedMillis msec = 0;
 
-    while (msec <= milliseconds) {
-        phone_handset.update();
-        press_button.update();
-        if (phone_handset.fallingEdge()) {
-            Serial.println("WAIT: Handset lifted");
+    if (mode == INITIALISING) { // no need for button checking here during initialisation
+        while (msec <= milliseconds) {
+            // Do nothing but wait
         }
-        if (press_button.fallingEdge()) {
-            Serial.println("WAIT: PRESS button pressed");
+    } else {
+        while (msec <= milliseconds) {
+            // Currently do nothing but wait
         }
-        
-        if (phone_handset.risingEdge()) {
-            Serial.println("WAIT Handset replaced");
-        }
-        if (press_button.risingEdge()) {
-            Serial.println("WAIT: PRESS button released");
-        }
+
+        // while (msec <= milliseconds) {
+        //     phone_handset.update();
+        //     press_button.update();
+        //     if (phone_handset.fallingEdge()) {
+        //         Serial.println("WAIT: Handset lifted");
+        //     }
+        //     if (press_button.fallingEdge()) {
+        //         Serial.println("WAIT: PRESS button pressed");
+        //     }
+
+        //     if (phone_handset.risingEdge()) {
+        //         Serial.println("WAIT Handset replaced");
+        //     }
+        //     if (press_button.risingEdge()) {
+        //         Serial.println("WAIT: PRESS button released");
+        //     }
+        // }
+    }
+}
+
+/**
+ * @brief Play a warning to the user that recording time is coming to the end
+ */
+static void sound_warning(void) {
+    static unsigned long previousWarningMillis;
+    unsigned long timeNow = millis();
+
+    if (timeNow - previousWarningMillis >= WARNING_DELAY) {
+        previousWarningMillis = timeNow;
+
+        // Play very short warning beep
+        synth_waveform.frequency(400);
+        synth_waveform.amplitude(0.3);
+        delay(10);
+        synth_waveform.amplitude(0); // silence beep
     }
 }
 
@@ -434,22 +468,22 @@ static void wait(unsigned int milliseconds) {
  * @brief Play a beep to indicate end of recording.
  */
 static void end_beep(void) {
-    synthWaveform.frequency(523.25);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.frequency(523.25);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(250);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(250);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(250);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(250);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 }
 
 /**
@@ -464,47 +498,47 @@ static void sos(void) {
     uint16_t word_space = dot * 7;
 
     // 3 dots
-    synthWaveform.amplitude(beep_volume);
-    synthWaveform.frequency(800);
+    synth_waveform.amplitude(beep_volume);
+    synth_waveform.frequency(800);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(letter_space);
 
     // 3 dashes
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(letter_space);
 
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(word_space);
 }
@@ -521,33 +555,33 @@ static void sd_card_error(void) {
     uint16_t word_space = dot * 7;
 
     // 3 dots
-    synthWaveform.amplitude(beep_volume);
-    synthWaveform.frequency(800);
+    synth_waveform.amplitude(beep_volume);
+    synth_waveform.frequency(800);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(letter_space);
 
     // 1 dash 2 dots
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dash);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
     wait(symbol_space);
-    synthWaveform.amplitude(beep_volume);
+    synth_waveform.amplitude(beep_volume);
     wait(dot);
-    synthWaveform.amplitude(0);
+    synth_waveform.amplitude(0);
 
     wait(word_space);
 }
@@ -638,6 +672,7 @@ static void start_recording(void) {
         Serial.print("RECORDING to ");
         Serial.println(filename);
         queue1.begin();
+        recording_timer = 0; // Reset timer to capture long recordings
         mode = RECORDING;
         print_mode();
         record_bytes_saved = 0L;
@@ -783,4 +818,22 @@ static void write_out_wav_header(void) {
     Serial.println("header written");
     Serial.print("Subchunk2: ");
     Serial.println(Subchunk2Size);
+}
+
+/**
+ * @brief Play or stop the UK dialing tone
+ */
+static void dialing_tone(dial_tone_state_t on_or_off) {
+    if (on_or_off == ON) {
+        // play 2 tones at the same time
+        synth_waveform_350.amplitude(beep_volume);
+        synth_waveform_350.frequency(350);
+        synth_waveform_450.amplitude(beep_volume);
+        synth_waveform_450.frequency(450);
+    } else {
+        synth_waveform_350.amplitude(0);
+        synth_waveform_450.amplitude(0);
+    }
+
+    dial_tone = on_or_off;
 }
