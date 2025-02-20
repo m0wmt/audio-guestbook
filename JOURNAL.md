@@ -84,6 +84,8 @@ Have too long recording sorted. Sound a tick every second for the last 15 second
 
 Think I have all the recording logic sorted now, just needs lots of testing to make sure!!  Have now copied relevant code from the button-test project to the main project. One issue I am having during testing is that when I play a beep to warn the user that their time is running out that appears on the recording as well - no idea why. Need to try the electret microphone plugged directly into the audio board and some headphones I have lying around to see if there is any crossover via the phone connections.
 
+Might need to replace the handset rocker switch, seems very noisy or there are multiple connections on the phone causing noise issues. 
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
