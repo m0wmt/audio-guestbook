@@ -1,8 +1,8 @@
 /**
  * Audio Guestbook
- * 
+ *
  * Let guests leave a message so the bride and groom can relive the day and hear what their loved
- * ones/friends had to say via an old BT rotary telephone (using a Teensy development board and a 
+ * ones/friends had to say via an old BT rotary telephone (using a Teensy development board and a
  * Teensy Audio board) to record messages to a micro SD card.
  *
  *
@@ -18,11 +18,12 @@
 #include <TimeLib.h>
 #include <Wire.h>
 
-//#include "play_sd_wav.h"
+// #include "play_sd_wav.h"
 
 #define HANDSET_PIN 41      // Handset switch
 #define PRESS_PIN 40        // PRESS switch
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
+#define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
 
 // Use Teensy 4.1 SD card instead of the audio boards SD card interface.
 #define SDCARD_CS_PIN BUILTIN_SDCARD
@@ -30,11 +31,10 @@
 #define SDCARD_SCK_PIN 13
 
 static const uint8_t morse_time_unit = 80; // Morse code time unit, length of a dot is 1 time unit in milliseconds
-static const uint32_t max_recording_time = 10'000; // Recording time limit (milliseconds)
+static const uint32_t max_recording_time = 30'000; // Recording time limit (milliseconds)
 // 60000 = 1 min
 // 120000 =  2 mins
 // 240000 = 4 mins
-
 
 // Globals
 AudioMixer4 mixer;                     // Allows merging several inputs to same output
@@ -68,9 +68,8 @@ typedef enum { // Keep track of dial tone state
 } dial_tone_state_t;
 dial_tone_state_t dial_tone = OFF;
 
-float beep_volume = 0.9f; // not too loud
-int led_state = LOW;      // LED state, LOW or HIGH
-uint32_t wait_start = 0;
+float beep_volume = 0.9f;          // not too loud
+int led_state = LOW;               // LED state, LOW or HIGH
 elapsedMillis recording_timer = 0; // Recording timer to prevent long messages
 
 // Debounce on switches
@@ -79,6 +78,7 @@ Bounce press_button = Bounce(PRESS_PIN, 40);
 
 static void sos(void);
 static void blink_led(void);
+static void sound_warning(void);
 static void end_beep(void);
 static void start_recording(void);
 static void continue_recording(void);
@@ -212,7 +212,8 @@ void loop() {
             mode = READY;
             print_mode();
         } else {
-            end_beep();
+            // end_beep();
+            sos();
             delay(3000);
         }
         break;
@@ -293,18 +294,23 @@ void loop() {
         } else if (recording_timer >= max_recording_time) {
             Serial.print("MAX recording time exceeded: ");
             Serial.println(recording_timer);
-            
+
             stop_recording();
+
+            // Play very short warning beep to indicate THE END
+            synth_waveform.frequency(700);
+            synth_waveform.amplitude(0.9);
             delay(1000);
-
-            sos();
-
-            //            dialing_tone(ON);
-            //            delay(1000);
+            synth_waveform.amplitude(0); // silence beep
 
             mode = ERROR;
             print_mode();
         } else {
+            // Check for coming near to end of max recording, sound a beep 15 seconds before the end
+            if (recording_timer > (max_recording_time - 15'000)) {
+                sound_warning();
+            }
+
             continue_recording();
         }
         break;
@@ -502,6 +508,10 @@ static void sos(void) {
     synth_waveform.amplitude(beep_volume);
     wait(dot);
     synth_waveform.amplitude(0);
+    wait(symbol_space);
+    synth_waveform.amplitude(beep_volume);
+    wait(dot);
+    synth_waveform.amplitude(0);
 
     wait(letter_space);
 
@@ -554,6 +564,24 @@ static void blink_led(void) {
     }
 }
 
+/**
+ * @brief Play a warning to the user that recording time is coming to the end
+ */
+static void sound_warning(void) {
+    static unsigned long previousWarningMillis;
+    unsigned long timeNow = millis();
+
+    if (timeNow - previousWarningMillis >= WARNING_DELAY) {
+        previousWarningMillis = timeNow;
+
+        // Play very short warning beep
+        synth_waveform.frequency(400);
+        synth_waveform.amplitude(0.3);
+        delay(10);
+        synth_waveform.amplitude(0); // silence beep
+    }
+}
+
 // NEED TO HANDLE ERROR - SET MODE - TODO
 /**
  * @brief Start recording voice to the SD card in .wav format.
@@ -577,9 +605,7 @@ static void continue_recording(void) {
 /**
  * @brief Stop recording voice, write out any remaining data to the SD card.
  */
-static void stop_recording(void) {
-    Serial.println("Stopped Recording");
-}
+static void stop_recording(void) { Serial.println("Stopped Recording"); }
 
 /**
  * @brief Play or stop the UK dialing tone
