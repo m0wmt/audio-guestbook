@@ -80,6 +80,10 @@ Still working on recording logic/errors but for a bit of variety I decided to mo
 
 3D model of replacement microphone: <img src="./images/gpo706-3d-mic.jpg" alt="3D Model" width="300">
 
+Have too long recording sorted. Sound a tick every second for the last 15 seconds and then end the recording. Will need a leaflet letting people know how long they can have to record a message. If phone is left off the hook for some reason morse code (SOS) will play via the handset speaker until the handset is replaced.
+
+Think I have all the recording logic sorted now, just needs lots of testing to make sure!! 
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
@@ -93,4 +97,4 @@ Still working on recording logic/errors but for a bit of variety I decided to mo
 * Handle possible errors.
 * Can we use the telephone dial to carry out actions?
 * Use [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) C coding standards - In progress.
-* Replace original microphone with an electret one. 
+* Replace original microphone with an electret one. Waiting on manufacture of the replacement microphone housing - request sent to 3D offsite manufacturer.
