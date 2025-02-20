@@ -43,7 +43,6 @@
 #include <SerialFlash.h>
 #include <TimeLib.h>
 #include <Wire.h>
-
 #include "play_sd_wav.h"
 
 /* Defines */
@@ -66,7 +65,7 @@ static const uint32_t max_recording_time = 30'000; // Recording time limit (mill
 
 /* Globals */
 AudioPlaySdWav wave_file;              // Play 44.1kHz 16-bit PCM .WAV files
-AudioInputI2S audioInput;              // I2S input from microphone on Teensy 4.0 Audio shield
+AudioInputI2S audio_input;              // I2S input from microphone on Teensy 4.0 Audio shield
 AudioMixer4 mixer;                     // Allows merging several inputs to same output
 AudioRecordQueue queue1;               // Create an audio buffer in memory before saving to SD
 AudioSynthWaveform synth_waveform;     // To create the "beep" sound effect
@@ -79,7 +78,7 @@ AudioConnection patchCord3(mixer, 0, audio_output, 0); // mixer output to speake
 AudioConnection patchCord4(mixer, 0, audio_output, 1); // mixer output to speaker (R)
 AudioConnection patchCord5(synth_waveform_350, 0, mixer, 2);
 AudioConnection patchCord6(synth_waveform_450, 0, mixer, 3);
-AudioConnection patchCord7(audioInput, 0, queue1, 0); // mic input to queue (L)
+AudioConnection patchCord7(audio_input, 0, queue1, 0); // mic input to queue (L)
 AudioControlSGTL5000 audio_shield;
 
 typedef enum { // Keep track of current state of the device
@@ -115,7 +114,7 @@ Bounce press_button = Bounce(PRESS_PIN, 40);
 static void play_file(const char *filename);
 static void wait(unsigned int milliseconds);
 static void end_beep(void);
-static void sos(void);
+static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
 static time_t get_teensy_three_time(void);
@@ -169,7 +168,7 @@ void setup() {
     // Audio connections require memory to work. The numberBlocks input
     // specifies how much memory to reserve for audio data. Each block holds 256
     // audio samples, or approx 5.8 ms of sound.
-    AudioMemory(80);
+    AudioMemory(100);
 
     // Comment these out if not using the audio adaptor board.
     audio_shield.enable();
@@ -182,6 +181,8 @@ void setup() {
 
     mixer.gain(0, 1.0f);
     mixer.gain(1, 1.0f);
+    mixer.gain(2, 1.0f);
+    mixer.gain(3, 1.0f);
 
     // Play a sound to indicate system is online
     dialing_tone(ON);
@@ -204,6 +205,8 @@ void setup() {
         b_sd_card = true;
         Serial.println("SD card present");
     }
+
+    delay(3000); // So we get to hear that the system is working!
 
     // filenames are always uppercase 8.3 format
     // Serial.println("Starting to play example .wav files");
@@ -247,9 +250,18 @@ void loop() {
             dialing_tone(OFF);
             mode = READY;
             print_mode();
+
+            // Get the maximum number of blocks that have ever been used
+            Serial.print("Ready: Max number of blocks used by Audio were: ");
+            Serial.println(AudioMemoryUsageMax());
+            AudioMemoryUsageMaxReset();
         } else {
-            sos();
+            //error();
             delay(3000);
+
+            // Get the maximum number of blocks that have ever been used
+            Serial.print("Error: Max number of blocks used by Audio were: ");
+            Serial.println(AudioMemoryUsageMax());
         }
         break;
 
@@ -293,7 +305,7 @@ void loop() {
             synth_waveform.amplitude(0.9);
             delay(750);
             synth_waveform.amplitude(0); // silence beep
-
+            delay(250); // Delay so the message start beep is not recorded - something to look at
             start_recording();
         }
         break;
@@ -312,17 +324,21 @@ void loop() {
 
             stop_recording();
 
+            end_beep();
+
             // Play very short warning beep to indicate THE END
-            synth_waveform.frequency(700);
-            synth_waveform.amplitude(0.9);
-            delay(1000);
-            synth_waveform.amplitude(0); // silence beep
+            // synth_waveform.frequency(700);
+            // synth_waveform.amplitude(0.4);
+            // delay(1000);
+            // synth_waveform.amplitude(0); // silence beep
 
             mode = ERROR;
             print_mode();
+
+            dialing_tone(ON);
         } else {
-            // Check for coming near to end of max recording, sound a beep 15 seconds before the end
-            if (recording_timer > (max_recording_time - 15'000)) {
+            // Check for coming near to end of max recording, sound a beep 'n' seconds before the end
+            if (recording_timer > (max_recording_time - 5'000)) {
                 sound_warning();
             }
 
@@ -457,10 +473,10 @@ static void sound_warning(void) {
         previousWarningMillis = timeNow;
 
         // Play very short warning beep
-        synth_waveform.frequency(400);
-        synth_waveform.amplitude(0.3);
-        delay(10);
-        synth_waveform.amplitude(0); // silence beep
+        synth_waveform_450.frequency(450);
+        synth_waveform_450.amplitude(0.3);
+        delay(50);
+        synth_waveform_450.amplitude(0); // silence beep
     }
 }
 
@@ -487,9 +503,9 @@ static void end_beep(void) {
 }
 
 /**
- * @brief Play morse code SOS.
+ * @brief Play morse code.
  */
-static void sos(void) {
+static void error(void) {
     // Morse code timings
     uint8_t dot = morse_time_unit; // milliseconds
     uint16_t dash = dot * 3;
@@ -497,7 +513,7 @@ static void sos(void) {
     uint16_t letter_space = dot * 3;
     uint16_t word_space = dot * 7;
 
-    // 3 dots
+    // dots
     synth_waveform.amplitude(beep_volume);
     synth_waveform.frequency(800);
     wait(dot);
@@ -528,6 +544,7 @@ static void sos(void) {
 
     wait(letter_space);
 
+    // dots
     synth_waveform.amplitude(beep_volume);
     wait(dot);
     synth_waveform.amplitude(0);
@@ -644,7 +661,7 @@ static void print_time(void) {
     static unsigned long previousTimeInMillis;
     unsigned long timeNow = millis();
 
-    if (timeNow - previousTimeInMillis >= one_second) {
+    if (timeNow - previousTimeInMillis >= 1000) {
         previousTimeInMillis = timeNow;
 
         digital_clock_display();
