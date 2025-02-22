@@ -95,7 +95,7 @@ As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted 
 <figure>
   <figcaption>Electret Microphone</figcaption>
   <img
-  src="./images/electric-mic.jpg"
+  src="./images/electret-mic.jpg"
   style="width: 300px;"
   alt="Electret Microphone">
 </figure>
