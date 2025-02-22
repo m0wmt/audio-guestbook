@@ -11,7 +11,7 @@
  */
 #include <Arduino.h>
 #include <Audio.h>
-#include <Bounce.h>
+#include <Bounce2.h>
 #include <SD.h>
 #include <SPI.h>
 #include <SerialFlash.h>
@@ -73,8 +73,11 @@ int led_state = LOW;               // LED state, LOW or HIGH
 elapsedMillis recording_timer = 0; // Recording timer to prevent long messages
 
 // Debounce on switches
-Bounce phone_handset = Bounce(HANDSET_PIN, 40);
-Bounce press_button = Bounce(PRESS_PIN, 40);
+// Bounce phone_handset = Bounce(HANDSET_PIN, 40);
+// Bounce press_button = Bounce(PRESS_PIN, 40);
+
+Bounce phone_handset = Bounce();
+Bounce press_button = Bounce();
 
 static void sos(void);
 static void blink_led(void);
@@ -120,6 +123,11 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);    // Orange LED on board
     digitalWrite(LED_BUILTIN, HIGH); // Glowing whilst running through setup code
 
+    phone_handset.attach(HANDSET_PIN, INPUT_PULLUP);
+    phone_handset.interval(40);
+    press_button.attach(PRESS_PIN, INPUT_PULLUP);
+    press_button.interval(40);
+
     delay(1000); // Delay so serial has time to start
 
     Serial.printf("Audio block set to %d samples\n", AUDIO_BLOCK_SAMPLES);
@@ -142,9 +150,10 @@ void setup() {
     audio_shield.enable();
     audio_shield.volume(0.6);
 
-    mixer.gain(0, 1.0f);
+    mixer.gain(0, 1.0f); // mixer, volume
     mixer.gain(1, 1.0f);
-
+    mixer.gain(2, 1.0f);
+    mixer.gain(3, 1.0f); // volume
     // sos();
     dialing_tone(ON);
 
@@ -347,7 +356,6 @@ void loop() {
     //     }
     // }
 
-    // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
     if (press_button.fallingEdge()) {
         Serial.println("PRESS button pressed");
         // delay(1000);
