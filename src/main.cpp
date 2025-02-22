@@ -283,7 +283,6 @@ void loop() {
     case RECORDMESSAGEPROMPT:
         // Play message to record after the beep
         delay(1000); // Wait a second for handset to be brought up to ear
-        Serial.println("Play record message .wav file...");
         wave_file.play("record.wav");
         while (!wave_file.isStopped()) {
             // Check if handset has been replaced
@@ -299,13 +298,15 @@ void loop() {
 
         // Check handset was not replaced above
         if (mode == RECORDMESSAGEPROMPT) {
-            Serial.println("Record message .wav file ended");
             // Play beep to let user know to start speaking
             synth_waveform.frequency(650);
+            mixer.gain(3, 1.0f);
+
             synth_waveform.amplitude(0.9);
             delay(750);
             synth_waveform.amplitude(0); // silence beep
             delay(250); // Delay so the message start beep is not recorded - something to look at
+
             start_recording();
         }
         break;
@@ -338,7 +339,7 @@ void loop() {
             dialing_tone(ON);
         } else {
             // Check for coming near to end of max recording, sound a beep 'n' seconds before the end
-            if (recording_timer > (max_recording_time - 5'000)) {
+            if (recording_timer > (max_recording_time - 10'000)) {
                 sound_warning();
             }
 
@@ -682,6 +683,10 @@ static void start_recording(void) {
             break;
         }
     }
+
+    Serial.print("start recording to file: '");
+    Serial.print(filename);
+    Serial.println("'");
 
     file_object = SD.open(filename, FILE_WRITE);
     Serial.println("Creating file.");
