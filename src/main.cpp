@@ -11,6 +11,11 @@
  * Modified AUDIO_BLOCK_SAMPLES to 256 in
  * /home/#########/.platformio/packages/framework-arduinoteensy/cores/teensy4/AudioStream.h as suggested by the audio
  * guestbook thread on the PRJC forum.
+ *
+ * Using clang-format addon for formatting code, CTRL+SHIFT+I to format code, put here as I know I'll forget!!
+ *
+ * To use RTC for file times we need to run the rtc-test program when connected to the internet (NTP time server) and
+ * have the button battery connected.
  */
 
 /**
@@ -35,6 +40,7 @@
  *
  */
 
+#include "play_sd_wav.h"
 #include <Arduino.h>
 #include <Audio.h>
 #include <Bounce.h>
@@ -43,7 +49,6 @@
 #include <SerialFlash.h>
 #include <TimeLib.h>
 #include <Wire.h>
-#include "play_sd_wav.h"
 
 /* Defines */
 
@@ -59,13 +64,16 @@
 
 static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
 static const uint32_t max_recording_time = 30'000; // Recording time limit (milliseconds)
+// Recording time limit (milliseconds) warning, will start to sound a beep in users ear.
+static const uint32_t max_recording_time_warning = 10'000;
+
 // 60000 = 1 min
 // 120000 =  2 mins
 // 240000 = 4 mins
 
 /* Globals */
 AudioPlaySdWav wave_file;              // Play 44.1kHz 16-bit PCM .WAV files
-AudioInputI2S audio_input;              // I2S input from microphone on Teensy 4.0 Audio shield
+AudioInputI2S audio_input;             // I2S input from microphone on Teensy 4.0 Audio shield
 AudioMixer4 mixer;                     // Allows merging several inputs to same output
 AudioRecordQueue queue1;               // Create an audio buffer in memory before saving to SD
 AudioSynthWaveform synth_waveform;     // To create the "beep" sound effect
@@ -153,10 +161,16 @@ void setup() {
     Serial.println("Setting up audio and SD card");
 
     setSyncProvider(get_teensy_three_time); // the function to get the time from the RTC
-    if (timeStatus() != timeSet)
+    if (timeStatus() != timeSet) {
         Serial.println("Unable to sync with the RTC");
-    else
+    } else {
         Serial.println("RTC has set the system time");
+        Serial.print(hour());
+        Serial.print(":");
+        Serial.print(minute());
+        Serial.print(":");
+        Serial.println(second());
+    }
 
     // Configure the input pins
     pinMode(HANDSET_PIN, INPUT_PULLUP);
@@ -256,7 +270,7 @@ void loop() {
             Serial.println(AudioMemoryUsageMax());
             AudioMemoryUsageMaxReset();
         } else {
-            //error();
+            // error();
             delay(3000);
 
             // Get the maximum number of blocks that have ever been used
@@ -305,7 +319,7 @@ void loop() {
             synth_waveform.amplitude(0.9);
             delay(750);
             synth_waveform.amplitude(0); // silence beep
-            delay(250); // Delay so the message start beep is not recorded - something to look at
+            delay(250);                  // Delay so the message start beep is not recorded - something to look at
 
             start_recording();
         }
@@ -339,7 +353,7 @@ void loop() {
             dialing_tone(ON);
         } else {
             // Check for coming near to end of max recording, sound a beep 'n' seconds before the end
-            if (recording_timer > (max_recording_time - 10'000)) {
+            if (recording_timer > (max_recording_time - max_recording_time_warning)) {
                 sound_warning();
             }
 
