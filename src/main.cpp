@@ -107,7 +107,7 @@ dial_tone_state_t dial_tone = OFF;
 
 float beep_volume = 0.9f; // not too loud
 int led_state = LOW;      // LED state, LOW or HIGH
-static int one_second = 1000;
+// static int one_second = 1000;
 char filename[15]; // Filename to save audio recording on SD card
 File file_object;  // The file object itself
 unsigned long record_bytes_saved = 0L;
@@ -119,16 +119,16 @@ Bounce phone_handset = Bounce(HANDSET_PIN, 40);
 Bounce press_button = Bounce(PRESS_PIN, 40);
 
 /* Function prototypes */
-static void play_file(const char *filename);
+// static void play_file(const char *filename);
 static void wait(unsigned int milliseconds);
 static void end_beep(void);
-static void error(void);
+// static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
 static time_t get_teensy_three_time(void);
-static void print_digits(int digits);
-static void digital_clock_display(void);
-static void print_time(void);
+// static void print_digits(int digits);
+// static void digital_clock_display(void);
+// static void print_time(void);
 static void sound_warning(void);
 static void start_recording(void);
 static void continue_recording(void);
@@ -388,21 +388,21 @@ void loop() {
 /**
  * @brief Play audio .wav file.
  */
-static void play_file(const char *filename) {
-    Serial.print("PLAYING file: ");
-    Serial.println(filename);
+// static void play_file(const char *filename) {
+//     Serial.print("PLAYING file: ");
+//     Serial.println(filename);
 
-    // Start playing the file.  This sketch continues to
-    // run while the file plays.
-    wave_file.play(filename);
+//     // Start playing the file.  This sketch continues to
+//     // run while the file plays.
+//     wave_file.play(filename);
 
-    // A brief delay for the library read WAV info
-    delay(25);
+//     // A brief delay for the library read WAV info
+//     delay(25);
 
-    // Simply wait for the file to finish playing.
-    while (wave_file.isPlaying()) {
-    }
-}
+//     // Simply wait for the file to finish playing.
+//     while (wave_file.isPlaying()) {
+//     }
+// }
 
 /**
  * @brief For debugging only, print out what mode we are set to.
@@ -520,60 +520,60 @@ static void end_beep(void) {
 /**
  * @brief Play morse code.
  */
-static void error(void) {
-    // Morse code timings
-    uint8_t dot = morse_time_unit; // milliseconds
-    uint16_t dash = dot * 3;
-    uint8_t symbol_space = dot;
-    uint16_t letter_space = dot * 3;
-    uint16_t word_space = dot * 7;
+// static void error(void) {
+//     // Morse code timings
+//     uint8_t dot = morse_time_unit; // milliseconds
+//     uint16_t dash = dot * 3;
+//     uint8_t symbol_space = dot;
+//     uint16_t letter_space = dot * 3;
+//     uint16_t word_space = dot * 7;
 
-    // dots
-    synth_waveform.amplitude(beep_volume);
-    synth_waveform.frequency(800);
-    wait(dot);
-    synth_waveform.amplitude(0);
-    wait(symbol_space);
-    synth_waveform.amplitude(beep_volume);
-    wait(dot);
-    synth_waveform.amplitude(0);
-    wait(symbol_space);
-    synth_waveform.amplitude(beep_volume);
-    wait(dot);
-    synth_waveform.amplitude(0);
+//     // dots
+//     synth_waveform.amplitude(beep_volume);
+//     synth_waveform.frequency(800);
+//     wait(dot);
+//     synth_waveform.amplitude(0);
+//     wait(symbol_space);
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dot);
+//     synth_waveform.amplitude(0);
+//     wait(symbol_space);
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dot);
+//     synth_waveform.amplitude(0);
 
-    wait(letter_space);
+//     wait(letter_space);
 
-    // 3 dashes
-    synth_waveform.amplitude(beep_volume);
-    wait(dash);
-    synth_waveform.amplitude(0);
-    wait(symbol_space);
-    synth_waveform.amplitude(beep_volume);
-    wait(dash);
-    synth_waveform.amplitude(0);
-    wait(symbol_space);
-    synth_waveform.amplitude(beep_volume);
-    wait(dash);
-    synth_waveform.amplitude(0);
+//     // 3 dashes
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dash);
+//     synth_waveform.amplitude(0);
+//     wait(symbol_space);
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dash);
+//     synth_waveform.amplitude(0);
+//     wait(symbol_space);
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dash);
+//     synth_waveform.amplitude(0);
 
-    wait(letter_space);
+//     wait(letter_space);
 
-    // dots
-    synth_waveform.amplitude(beep_volume);
-    wait(dot);
-    synth_waveform.amplitude(0);
-    wait(symbol_space);
-    synth_waveform.amplitude(beep_volume);
-    wait(dot);
-    synth_waveform.amplitude(0);
-    wait(symbol_space);
-    synth_waveform.amplitude(beep_volume);
-    wait(dot);
-    synth_waveform.amplitude(0);
+//     // dots
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dot);
+//     synth_waveform.amplitude(0);
+//     wait(symbol_space);
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dot);
+//     synth_waveform.amplitude(0);
+//     wait(symbol_space);
+//     synth_waveform.amplitude(beep_volume);
+//     wait(dot);
+//     synth_waveform.amplitude(0);
 
-    wait(word_space);
-}
+//     wait(word_space);
+// }
 
 /**
  * @brief Play morse code SD to indicate SD card error.
@@ -645,43 +645,43 @@ static time_t get_teensy_three_time(void) { return Teensy3Clock.get(); }
 /**
  * @brief Utility function for digital clock display: prints preceding colon and leading 0.
  */
-static void print_digits(int digits) {
-    Serial.print(":");
-    if (digits < 10)
-        Serial.print('0');
+// static void print_digits(int digits) {
+//     Serial.print(":");
+//     if (digits < 10)
+//         Serial.print('0');
 
-    Serial.print(digits);
-}
+//     Serial.print(digits);
+// }
 
 /**
  * @brief Digital clock display of the time.
  */
-static void digital_clock_display(void) {
-    Serial.print(hour());
-    print_digits(minute());
-    print_digits(second());
-    Serial.print(" ");
-    Serial.print(day());
-    Serial.print(" ");
-    Serial.print(month());
-    Serial.print(" ");
-    Serial.print(year());
-    Serial.println();
-}
+// static void digital_clock_display(void) {
+//     Serial.print(hour());
+//     print_digits(minute());
+//     print_digits(second());
+//     Serial.print(" ");
+//     Serial.print(day());
+//     Serial.print(" ");
+//     Serial.print(month());
+//     Serial.print(" ");
+//     Serial.print(year());
+//     Serial.println();
+// }
 
 /**
  * @brief Dispaly the time.
  */
-static void print_time(void) {
-    static unsigned long previousTimeInMillis;
-    unsigned long timeNow = millis();
+// static void print_time(void) {
+//     static unsigned long previousTimeInMillis;
+//     unsigned long timeNow = millis();
 
-    if (timeNow - previousTimeInMillis >= 1000) {
-        previousTimeInMillis = timeNow;
+//     if (timeNow - previousTimeInMillis >= 1000) {
+//         previousTimeInMillis = timeNow;
 
-        digital_clock_display();
-    }
-}
+//         digital_clock_display();
+//     }
+// }
 
 // NEED TO HANDLE ERROR - SET MODE - TODO
 /**
