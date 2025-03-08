@@ -86,9 +86,9 @@ Think I have all the recording logic sorted now, just needs lots of testing to m
 
 Might need to replace the handset rocker switch, seems very noisy or there are multiple connections on the phone causing noise issues or change pin connections so I don't go through the 'T' connection on the phone.
 
-Did a test of the handset microphone vs the electret microphone and direct wiring without the telephone patch connections on the phone base. As you can see from the pictures below, the electret microphone has a clearer signal and with no wiring going through the phone connection plate no warning beeps appear in the last 5 seconds of the extended recording.
+Did a test of the handset microphone vs the electret microphone and direct wiring without the telephone patch connections on the phone base. As you can see from the pictures below, the electret microphone has a clearer signal and with no wiring going through the phone connection plate no warning beeps appear in the last 'n' seconds of the extended recording.
 
-Handset microphone and 5 spikes near the end showing the warning beep also being recorded. <img src="./images/internal-mic-and-wiring.png" alt="Handset Microphone" width="500">
+Handset microphone and warning spikes near the end showing the warning beep also being recorded. <img src="./images/internal-mic-and-wiring.png" alt="Handset Microphone" width="500">
 
 Electret microphone; clearer audio, and no warning spike feedback recorded. <img src="./images/external-mic-and-wiring.png" alt="Handset Microphone" width="500">
 
