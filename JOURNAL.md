@@ -92,6 +92,10 @@ Handset microphone and 5 spikes near the end showing the warning beep also being
 
 Electret microphone; clearer audio, and no warning spike feedback recorded. <img src="./images/external-mic-and-wiring.png" alt="Handset Microphone" width="500">
 
+Have now removed the handset connections (all 4) from the 'T' connector on the telephone motherboard and soldered/wired them directly to the Teensy Audioboard for hopefully clearer sound/voice recording. Waiting on 3D model of the microphone before I swap the original out for the Electret one.
+
+Now just a case of more testing to see what errors I can generate and think about how to power the telephone/Teensy etc. if there isn't a power socket available. Need to run a test on how much power it uses for say 12 hours.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
