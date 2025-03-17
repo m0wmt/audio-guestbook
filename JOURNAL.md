@@ -98,7 +98,7 @@ Now just a case of more testing to see what errors I can generate and think abou
 
 Testing going well, for something different going to move to admin monitor program.
 
-Using an ESP32S3 mini may not be the best, having issues with Linux and USB after writing firmware to the board. Need to remove the USB cable and re-attach it then run the serial monitor. For some reason the board isn't rebooting after the upload, or if it is the monitor isn't seeing it! Other than that the access point works, just need to design the web page I'll be displaying. It will be a view only program, don't want any chance of someone cocking up the Teensy by sending a message to it. 
+Using an ESP32-S3 mini MCU may not be the best, having issues with Linux and USB after writing firmware with this board. Need to remove the USB cable and re-attach it then run the serial monitor to get access to the serial output. For some reason the board isn't rebooting after the upload, or if it is the monitor isn't seeing it! Other than that the wi-fi access point works, just need to design the web page I'll be displaying, have a few ideas. It will be a view only program, don't want any chance of someone cocking up the Teensy by sending a message to it. 
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
