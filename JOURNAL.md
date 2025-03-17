@@ -96,6 +96,10 @@ Have now removed the handset connections (all 4) from the 'T' connector on the t
 
 Now just a case of more testing to see what errors I can generate and think about how to power the telephone/Teensy etc. if there isn't a power socket available. Need to run a test on how much power it uses for say 12 hours.
 
+Testing going well, for something different going to move to admin monitor program.
+
+Using an ESP32S3 mini may not be the best, having issues with Linux and USB after writing firmware to the board. Need to remove the USB cable and re-attach it then run the serial monitor. For some reason the board isn't rebooting after the upload, or if it is the monitor isn't seeing it! Other than that the access point works, just need to design the web page I'll be displaying. It will be a view only program, don't want any chance of someone cocking up the Teensy by sending a message to it. 
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
