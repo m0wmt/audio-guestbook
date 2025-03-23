@@ -108,6 +108,8 @@ Spent some time on the guestbook monitor program today, takes longer than you th
 
 <img src="./images/monitor.png" alt="Monitor" width="300">
 
+Need to work now on connecting the Teensy and ESP32 so that the Teensy can update the ESP32 (if it's connected/running) with it's status, disk space and number of recordings. Might add other information but that's the minimum I want for now.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
