@@ -104,6 +104,10 @@ Using an ESP32-S3 mini MCU may not be the best, having issues with Linux and USB
 
 <img src="./images/electret-mic-in-model.jpg" alt="Mic in place" height="275"> <img src="./images/electret-mic-in-model-side-view.jpg" alt="Side view" height="275">
 
+Spent some time on the guestbook monitor program today, takes longer than you think to create an access point web page! Now have a web page via the ESP32 which updates every 30 seconds (currently) giving you and overview of the firmware status, number of recordings and disk space left on the SD card.
+
+<img src="./images/monitor.png" alt="Monitor" width="300">
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
