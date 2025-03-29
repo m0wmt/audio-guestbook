@@ -100,7 +100,7 @@ Testing going well, for something different going to move to admin monitor progr
 
 Using an ESP32-S3 mini MCU may not be the best, having issues with Linux and USB after writing firmware with this board. Need to remove the USB cable and re-attach it then run the serial monitor to get access to the serial output. For some reason the board isn't rebooting after the upload, or if it is the monitor isn't seeing it! Other than that the wi-fi access point works, just need to design the web page I'll be displaying, have a few ideas. It will be a view only program, don't want any chance of someone cocking up the Teensy by sending a message to it. 
 
-3D model for microphone placement arrived, was resin printed. I didn't quite get the location of the tabs at the bottom far enough out to stop it rotating, once it's in position I'll decide if this is a problem or not. Microphone fits in nicely (after a tiny bit of fettling) in the model.
+3D model for microphone placement arrived, was resin printed. I didn't quite get the location of the tabs at the bottom far enough out to stop it rotating, once it's in position I'll decide if this is a problem or not. Microphone fits in nicely (after a tiny bit of fettling) in the model once I drilled the big hole out to 10mm. Had set it at 9.7mm (the size of the microphone) but tolerances were too tight! Need to update the model at some point, will try using OpenSCAD for a change.
 
 <img src="./images/electret-mic-in-model.jpg" alt="Mic in place" height="275"> <img src="./images/electret-mic-in-model-side-view.jpg" alt="Side view" height="275">
 
