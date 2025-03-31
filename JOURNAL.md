@@ -112,6 +112,8 @@ Need to work now on connecting the Teensy and ESP32 so that the Teensy can updat
 
 Had a thought about the venue not having mains power available where the phone will be, instead of wi-fi for the monitor program can I use BLE, the answer is yes. Will have to host the web page to view the status of everything on github pages - so I don't corrupt my current repository I will be making a new repository for the monitor web page, once I've done this I'll update this journal with the location. No idea if I'll use this or the wi-fi or if it'll work but worth a try and I'll learn something new!
 
+Trying out a new 3D modeling tool - Tinkercad - which can be run on an iPad. Not as powerful as OnShape or computer based 3D packages but for what I need here works just fine. A new .stl file is available in the notes directory (helpfully named tinkercad in the file name!). Yet to be printed so no idea if it's more accurate than the first model but it's there for later testing.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
