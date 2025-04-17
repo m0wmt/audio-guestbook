@@ -116,7 +116,7 @@ Trying out a new 3D modeling tool - Tinkercad - which can be run on an iPad. Not
 
 Been a little while - took a break as the weather has been nice!.  Yesterday (15/4/25) I replaced the original microphone with the electret microphone in the phone, soldered in place but can be removed and the original put back in if ever needed. Recordings are good so that's another step closer and the 10 second warning beeps are effectively gone.
 
-<img src="./images/electret-mic-in-phone.jpg" alt="Monitor" height="300">
+<img src="./images/electret-mic-in-phone.jpg" alt="Monitor" height="300"> <audio controls src="./audio/output.wav"></audio>
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
