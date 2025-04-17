@@ -106,13 +106,17 @@ Using an ESP32-S3 mini MCU may not be the best, having issues with Linux and USB
 
 Spent some time on the guestbook monitor program today, takes longer than you think to create an access point web page! Now have a web page via the ESP32 which updates every 30 seconds (currently) giving you and overview of the firmware status, number of recordings and disk space left on the SD card.
 
-<img src="./images/monitor.png" alt="Monitor" width="300">
+<img src="./images/monitor.png" alt="Monitor" height="400">
 
 Need to work now on connecting the Teensy and ESP32 so that the Teensy can update the ESP32 (if it's connected/running) with it's status, disk space and number of recordings. Might add other information but that's the minimum I want for now.
 
 Had a thought about the venue not having mains power available where the phone will be, instead of wi-fi for the monitor program can I use BLE, the answer is yes. Will have to host the web page to view the status of everything on github pages - so I don't corrupt my current repository I will be making a new repository for the monitor web page, once I've done this I'll update this journal with the location. No idea if I'll use this or the wi-fi or if it'll work but worth a try and I'll learn something new!
 
 Trying out a new 3D modeling tool - Tinkercad - which can be run on an iPad. Not as powerful as OnShape or computer based 3D packages but for what I need here works just fine. A new .stl file is available in the notes directory (helpfully named tinkercad in the file name!). Yet to be printed so no idea if it's more accurate than the first model but it's there for later testing.
+
+Been a little while - took a break as the weather has been nice!.  Yesterday (15/4/25) I replaced the original microphone with the electret microphone in the phone, soldered in place but can be removed and the original put back in if ever needed. Recordings are good so that's another step closer and the 10 second warning beeps are effectively gone.
+
+<img src="./images/electret-mic-in-phone.jpg" alt="Monitor" height="300">
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
