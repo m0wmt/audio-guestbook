@@ -114,9 +114,9 @@ Had a thought about the venue not having mains power available where the phone w
 
 Trying out a new 3D modeling tool - Tinkercad - which can be run on an iPad. Not as powerful as OnShape or computer based 3D packages but for what I need here works just fine. A new .stl file is available in the notes directory (helpfully named tinkercad in the file name!). Yet to be printed so no idea if it's more accurate than the first model but it's there for later testing.
 
-Been a little while - took a break as the weather has been nice!.  Yesterday (15/4/25) I replaced the original microphone with the electret microphone in the phone, soldered in place but can be removed and the original put back in if ever needed. Recordings are good so that's another step closer and the 10 second warning beeps are effectively gone.
+Been a little while - took a break as the weather has been nice!.  Yesterday (15/4/25) I replaced the original microphone with the electret microphone in the phone, soldered in place but can be removed and the original put back in if ever needed. Recordings are good so that's another step closer and the 10 second warning beeps are effectively gone - <audio controls src="./audio/output.wav"></audio> <a href="./audio/output.wav"> example sound file</a>.
 
-<img src="./images/electret-mic-in-phone.jpg" alt="Monitor" height="300"> <audio controls src="./audio/output.wav"></audio>
+<img src="./images/electret-mic-in-phone.jpg" alt="Monitor" height="300">
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
