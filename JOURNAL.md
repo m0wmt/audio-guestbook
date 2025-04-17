@@ -118,6 +118,8 @@ Been a little while - took a break as the weather has been nice!.  Yesterday (15
 
 <img src="./images/electret-mic-in-phone.jpg" alt="Monitor" height="300">
 
+Created new admin monitor program for low energy bluetooth, can read the test values on my phone using the nRF Connect app available on the Android/iPhone stores.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
