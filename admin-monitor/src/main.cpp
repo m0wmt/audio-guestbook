@@ -1,3 +1,10 @@
+/** 
+ * This is the admin monitor for the audio guestbook. It runs on an ESP32 and has a wi-fi
+ * access point (password protected) so admin user can monitor how the guestbook is doing. 
+ * 
+ * Connection between the teensy and the esp32 will be via serial, receive only for the ESP,
+ * do not want anything/one messing with the guestbook. 
+*/
 #include <Arduino.h>
 
 // Load Wi-Fi library

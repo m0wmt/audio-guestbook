@@ -16,6 +16,9 @@
  *
  * To use RTC for file times we need to run the rtc-test program when connected to the internet (NTP time server) and
  * have the button battery connected.
+ * 
+ * UART communications between Teensy and ESP32 which will have wifi/bluetooth access point web page to show 
+ * status of this applicaiton. 
  */
 
 /**
@@ -61,6 +64,11 @@
 #define PRESS_PIN 40        // PRESS switch
 #define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
+
+// set this to the hardware serial port we are going to use to connect to ESP32. Needs to be a
+// higher serial port due to the audio shield taking up all the lower pins. 
+// Pin 35 - Transmit, Pin 34 Receive, do not forget to connect common gnd between each device. 
+#define ESP32SERIAL Serial8 
 
 static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
 static const uint32_t max_recording_time = 30'000; // Recording time limit (milliseconds)
@@ -150,7 +158,9 @@ void setup() {
     //     // Wait for serial to start!
     // }
 
-    delay(1000);
+    //ESP32SERIAL.begin(9600);
+    
+    delay(2000);
 
     Serial.println("Serial set up correctly");
 
@@ -170,6 +180,14 @@ void setup() {
         Serial.print(minute());
         Serial.print(":");
         Serial.println(second());
+    }
+
+
+    // Check connection to ESP32
+    if (ESP32SERIAL) {
+        Serial.println("ESP32SERIAL initialised");
+    } else {
+        Serial.println("ESP32SERIAL not initialised");
     }
 
     // Configure the input pins
