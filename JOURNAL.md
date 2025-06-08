@@ -120,6 +120,8 @@ Been a little while - took a break as the weather has been nice!.  Yesterday (15
 
 Created new admin monitor program for low energy bluetooth, can read the test values on my phone using the nRF Connect app available on the Android/iPhone stores.
 
+Been a while but starting to work now on the admin monitor. Using serial8 on the Teensy (pin 34/35) as the other pins are being used/obscured by the audio board.  The monitor will only receive information from the teensy, it will not be able to transmit to it as I don't want anyone messing with the guestbook.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
