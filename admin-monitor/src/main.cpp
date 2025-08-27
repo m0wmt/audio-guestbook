@@ -14,12 +14,13 @@
 #include <WiFi.h>
 
 #include "../include/index.h"
+#include "../include/config.h"
 
 static String processor(const String &var);
     
 // Replace with your network credentials
-const char *ssid = "Guestbook-AP";
-const char *password = "123456789"; // temp password!
+//const char *ssid = "Guestbook-AP";
+//const char *password = "123456789"; // temp password!
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -58,16 +59,15 @@ void setup() {
     // Connect to Wi-Fi network with SSID and password
     Serial.println("Setting AP (Access Point)…");
 
-    // Remove the password parameter, if you want the AP (Access Point) to be open
-    WiFi.softAP(ssid, password);
+    // Taken from config.h
+    WiFi.softAP(SSID, WIFI_PASSWORD);
 
-    Serial.println("Connecting to ");
-    Serial.print(ssid);
+    Serial.print("Connecting to: ");
+    Serial.println(SSID);
 
     // If connection successful show IP address in serial monitor
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(ssid);
+    Serial.print("Connected to: ");
+    Serial.println(SSID);
 
     IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
