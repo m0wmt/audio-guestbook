@@ -33,6 +33,8 @@ unsigned long timer_delay = 30000;
 float disk_space = 14.0;
 unsigned int recordings = 7;
 unsigned int status = 1;
+char runtime_buffer[10];
+
 
 void setup() {
 
@@ -40,7 +42,7 @@ void setup() {
 
     Serial.begin(115200);
 
-    delay(3000);
+    delay(5000);
 
     Serial.println(F("\n##################################"));
     Serial.println(F("ESP32 Information:"));
@@ -89,11 +91,14 @@ void setup() {
 
     Serial.println("HTTP server started");
     Serial.println("");
+
+    // Set up run time buffer to 5 seconds, waiting time above!
+    sprintf(runtime_buffer, "%02d:%02d:%02d", 0, 0, 5);
 }
 
 void loop() {
     if ((millis() - last_time) > timer_delay) {
-        disk_space -= 0.1;
+        disk_space -= 0.05;
         recordings += 1;
         Serial.printf("Disk Space = %.2f Gb", disk_space);
         Serial.println();
@@ -114,6 +119,17 @@ void loop() {
         events.send(String(recordings).c_str(), "recordings", millis());
 
         last_time = millis();
+
+        //run_hours = (last_time / 1000) / 3600;
+        //run_minutes = ((last_time / 1000) % 3600) / 60;
+        //run_seconds = ((last_time / 1000) % 3600) % 60;
+        //sprintf(runtime_buffer, "%02d:%02d:%02d", run_hours, run_minutes, run_seconds);
+        sprintf(runtime_buffer, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
+                ((last_time / 1000) % 3600) % 60);
+
+        Serial.print("Run time: ");
+        Serial.println(runtime_buffer);
+        events.send(String(runtime_buffer), "runtime", millis());
     }
 }
 
@@ -132,6 +148,10 @@ static String processor(const String &var) {
             return "ERROR";
     } else if (var == "RECORDINGS") {
         return String(recordings);
+    } else if (var == "RUNTIME") {
+        return String(runtime_buffer);
     }
+
     return String();
 }
+

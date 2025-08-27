@@ -8,10 +8,10 @@ const char MAIN_page[] PROGMEM = R"=====(
     p { font-size: 1.2rem;}
     body {  margin: 0;}
     .topnav { overflow: hidden; background-color: #50B8B4; color: white; font-size: 1rem; }
-    .content { padding: 20px; }
+    .content { padding: 15px; }
     .card { background-color: white; box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5); }
     .cards { max-width: 800px; margin: 0 auto; display: grid; grid-gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-    .reading { font-size: 1.4rem; }
+    .reading { font-size: 1.3rem; }
   </style>
 </head>
 <body>
@@ -27,7 +27,13 @@ const char MAIN_page[] PROGMEM = R"=====(
         <p style="color:rgb(10, 66, 64);">RECORDINGS</p><p><span class="reading"><span id="rec">%RECORDINGS%</span></span></p>
       </div>
       <div class="card">
-        <p style="color:rgb(10, 66, 64);">DISK SPACE</p><p><span class="reading"><span id="disk">%DISKSPACE%</span> Gb</span></p>
+        <p style="color:rgb(10, 66, 64);">DISK SPACE REMAINING</p><p><span class="reading"><span id="disk">%DISKSPACE%</span> Gb</span></p>
+      </div>
+      <div class="card">
+        <p style="color:rgb(10, 66, 64);">RUN TIME</p>
+        <p><span class="reading">
+          <span id="rt">%RUNTIME%</span>
+        </span></p>
       </div>
     </div>
   </div>
@@ -62,6 +68,12 @@ if (!!window.EventSource) {
   console.log("diskspace", e.data);
   document.getElementById("disk").innerHTML = e.data;
  }, false);
+
+ source.addEventListener('runtime', function(e) {
+  console.log("runtime", e.data);
+  document.getElementById("rt").innerHTML = e.data;
+ }, false);
+
 }
 </script>
 </body>
