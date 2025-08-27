@@ -120,10 +120,6 @@ void loop() {
 
         last_time = millis();
 
-        //run_hours = (last_time / 1000) / 3600;
-        //run_minutes = ((last_time / 1000) % 3600) / 60;
-        //run_seconds = ((last_time / 1000) % 3600) % 60;
-        //sprintf(runtime_buffer, "%02d:%02d:%02d", run_hours, run_minutes, run_seconds);
         sprintf(runtime_buffer, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
                 ((last_time / 1000) % 3600) % 60);
 
