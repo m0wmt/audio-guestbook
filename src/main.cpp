@@ -16,9 +16,14 @@
  *
  * To use RTC for file times we need to run the rtc-test program when connected to the internet (NTP time server) and
  * have the button battery connected.
- * 
- * UART communications between Teensy and ESP32 which will have wifi/bluetooth access point web page to show 
- * status of this applicaiton. 
+ *
+ * UART communications between Teensy and ESP32 which will have wifi/bluetooth access point web page to show
+ * status of this applicaiton.
+ *
+ * Teensy command line tools are available at: ~/.platformio/packages/tool-teensy
+ *   $HOME/.platformio/packages/tool-teensy/teensy_ports -L
+ *   $HOME/.platformio/packages/tool-teensy/teensy_loader_cli --mcu=TEENSY41 -s -w -v firmware.hex
+ *   (view logs) tail -f /var/log/syslog   
  */
 
 /**
@@ -64,6 +69,7 @@
 #define PRESS_PIN 40        // PRESS switch
 #define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
+#define ESP_BLINK_DELAY 2000 // Send blink message to ESP32 (admin monitor) via serial every 'n' milliseconds
 
 // set this to the hardware serial port we are going to use to connect to ESP32. Needs to be a
 // higher serial port due to the audio shield taking up all the lower pins. 
@@ -71,13 +77,14 @@
 #define ESP32SERIAL Serial8 
 
 static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
-static const uint32_t max_recording_time = 30'000; // Recording time limit (milliseconds)
+static const uint32_t max_recording_time = 600'000; // Recording time limit (milliseconds)
 // Recording time limit (milliseconds) warning, will start to sound a beep in users ear.
 static const uint32_t max_recording_time_warning = 10'000;
 
 // 60000 = 1 min
 // 120000 =  2 mins
 // 240000 = 4 mins
+// 600000 = 10 mins
 
 /* Globals */
 AudioPlaySdWav wave_file;              // Play 44.1kHz 16-bit PCM .WAV files
@@ -133,6 +140,7 @@ static void end_beep(void);
 // static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
+//static void blink_esp32(void);
 static time_t get_teensy_three_time(void);
 // static void print_digits(int digits);
 // static void digital_clock_display(void);
@@ -160,7 +168,7 @@ void setup() {
 
     //ESP32SERIAL.begin(9600);
     
-    delay(2000);
+    delay(2000); 
 
     Serial.println("Serial set up correctly");
 
@@ -183,12 +191,12 @@ void setup() {
     }
 
 
-    // Check connection to ESP32
-    if (ESP32SERIAL) {
-        Serial.println("ESP32SERIAL initialised");
-    } else {
-        Serial.println("ESP32SERIAL not initialised");
-    }
+    // Check connection to ESP32 has been initialised
+    // if (ESP32SERIAL) {
+    //     Serial.println("ESP32SERIAL initialised");
+    // } else {
+    //     Serial.println("ESP32SERIAL not initialised");
+    // }
 
     // Configure the input pins
     pinMode(HANDSET_PIN, INPUT_PULLUP);
@@ -400,6 +408,7 @@ void loop() {
     }
 
     blink_led();
+    //blink_esp32();
     //    print_time();
 }
 
@@ -654,6 +663,20 @@ static void blink_led(void) {
         digitalWrite(LED_BUILTIN, led_state);
     }
 }
+
+// /**
+//  * @brief Blink the admin monitor esp32 - just for testing!
+//  */
+// static void blink_esp32(void) {
+//     static unsigned long previousMillis;
+//     unsigned long timeNow = millis();
+//     char buffer[6] = "Hello"; // String data
+
+//     if (timeNow - previousMillis >= ESP_BLINK_DELAY) {
+//         previousMillis = timeNow;
+//         ESP32SERIAL.write(buffer, 5);   // write to esp32
+//     }
+// }
 
 /**
  * @brief Get the time from RTC (if available).
