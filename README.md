@@ -45,7 +45,7 @@ As mentioned in the JOURNAL, the PJRC forum thread on the audio guestbook noted 
 - Mico SD card (7.2Gb for 24hrs @ 44.1kHz)
 - LED light(s)?
 - Switch
-- ESP32-S3 Mini
+- ESP32-S3 Mini (Admin Monitor Website)
 - [Electret](https://en.wikipedia.org/wiki/Electret_microphone) microphone
 - [My 3D model](https://github.com/m0wmt/audio-guestbook/blob/main/notes/GPO706-Electret-Mic.stl) (.stl) of electret microphone housing
 
