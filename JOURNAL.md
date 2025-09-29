@@ -127,7 +127,7 @@ the admin application as I like the view I can show on my phone.  Will need to t
 
 Wi-fi version now working. Sending data from the Teensy via Serial8 to the ESP32 and then displaying the information on the web page that the ESP32 is publishing.  Could do more on it but it's working so happy for now. <img src="./images/admin-page.jpg" alt="Admin Page" height="400">
 
-Haven't been able to upload to the Teensy reliably since a Linux (Mint) update so started up the Windows laptop and worked on there for the Teensy part.  Not sure if it was the update that stopped it working (USB issues) but spent too much time trying to get it to work so went the easy route for now.
+Haven't been able to upload to the Teensy reliably since a Linux (Mint) update so started up the Windows laptop and worked on there for the Teensy part.  Not sure if it was the update that stopped it working (USB issues) but spent too much time trying to get it to work so went the easy route for now. 
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
