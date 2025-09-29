@@ -69,7 +69,7 @@
 #define PRESS_PIN 40        // PRESS switch
 #define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
 #define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
-#define ESP_BLINK_DELAY 2000 // Send blink message to ESP32 (admin monitor) via serial every 'n' milliseconds
+#define UPDATE_DELAY 5000   // Send message to admin monitor application (ESP32) via UART every 'n' milliseconds
 
 // set this to the hardware serial port we are going to use to connect to ESP32. Needs to be a
 // higher serial port due to the audio shield taking up all the lower pins. 
@@ -104,6 +104,17 @@ AudioConnection patchCord6(synth_waveform_450, 0, mixer, 3);
 AudioConnection patchCord7(audio_input, 0, queue1, 0); // mic input to queue (L)
 AudioControlSGTL5000 audio_shield;
 
+// Structure for sending data to ESP32 monitor application
+typedef struct __attribute__ ((packed, aligned(1))) {
+    uint8_t mode;
+    uint16_t recordings;
+    uint64_t disk_remaining;
+} status_data_t;
+
+status_data_t audio_guestbook_data;
+uint8_t sync_header[] = {0xDE, 0xAD, 0xBE, 0xEF};   // Syncronization header
+// End of Teensy->ESP32 structure setup
+
 typedef enum { // Keep track of current state of the device
     ERROR,
     INITIALISING,
@@ -127,7 +138,9 @@ char filename[15]; // Filename to save audio recording on SD card
 File file_object;  // The file object itself
 unsigned long record_bytes_saved = 0L;
 uint32_t wait_start = 0;
-elapsedMillis recording_timer = 0; // Recording timer to prevent long messages
+elapsedMillis recording_timer = 0;  // Recording timer to prevent long messages
+uint16_t number_of_recordings = 0;  // Number of recordings since last started
+uint64_t total_disk_size = 0;       // SD Card disk size
 
 // Debounce on switches
 Bounce phone_handset = Bounce(HANDSET_PIN, 40);
@@ -140,7 +153,7 @@ static void end_beep(void);
 // static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
-//static void blink_esp32(void);
+static void update_admin_monitor(void);
 static time_t get_teensy_three_time(void);
 // static void print_digits(int digits);
 // static void digital_clock_display(void);
@@ -166,8 +179,8 @@ void setup() {
     //     // Wait for serial to start!
     // }
 
-    //ESP32SERIAL.begin(9600);
-    
+    ESP32SERIAL.begin(9600);
+
     delay(2000); 
 
     Serial.println("Serial set up correctly");
@@ -192,11 +205,11 @@ void setup() {
 
 
     // Check connection to ESP32 has been initialised
-    // if (ESP32SERIAL) {
-    //     Serial.println("ESP32SERIAL initialised");
-    // } else {
-    //     Serial.println("ESP32SERIAL not initialised");
-    // }
+    if (ESP32SERIAL) {
+        Serial.println("ESP32SERIAL initialised");
+    } else {
+        Serial.println("ESP32SERIAL not initialised");
+    }
 
     // Configure the input pins
     pinMode(HANDSET_PIN, INPUT_PULLUP);
@@ -266,6 +279,15 @@ void setup() {
 
     mode = READY;
     print_mode();
+
+    if (b_sd_card) {
+        total_disk_size = SD.totalSize();
+        Serial.print("SD card size: "); Serial.println(total_disk_size);
+        Serial.print("SD space used: "); Serial.println(SD.usedSize());
+        audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
+    }
+
+    update_admin_monitor();
 
     dialing_tone(OFF);
 
@@ -357,6 +379,7 @@ void loop() {
         if (phone_handset.risingEdge()) {
             stop_recording();
             end_beep();
+            number_of_recordings++;
             mode = READY;
             print_mode();
         } else if (recording_timer >= max_recording_time) {
@@ -364,8 +387,8 @@ void loop() {
             Serial.println(recording_timer);
 
             stop_recording();
-
             end_beep();
+            number_of_recordings++;
 
             // Play very short warning beep to indicate THE END
             // synth_waveform.frequency(700);
@@ -408,7 +431,7 @@ void loop() {
     }
 
     blink_led();
-    //blink_esp32();
+    update_admin_monitor();
     //    print_time();
 }
 
@@ -664,19 +687,32 @@ static void blink_led(void) {
     }
 }
 
-// /**
-//  * @brief Blink the admin monitor esp32 - just for testing!
-//  */
-// static void blink_esp32(void) {
-//     static unsigned long previousMillis;
-//     unsigned long timeNow = millis();
-//     char buffer[6] = "Hello"; // String data
+/**
+ * @brief Update the admin monitor (esp32 in this case)
+ */
+static void update_admin_monitor(void) {
+    static unsigned long previousMillis;
+    unsigned long timeNow = millis();
 
-//     if (timeNow - previousMillis >= ESP_BLINK_DELAY) {
-//         previousMillis = timeNow;
-//         ESP32SERIAL.write(buffer, 5);   // write to esp32
-//     }
-// }
+    if (timeNow - previousMillis >= UPDATE_DELAY) {
+        previousMillis = timeNow;
+
+        for (size_t i = 0; i < sizeof sync_header; i++) {
+            ESP32SERIAL.write(sync_header[i]);
+        }
+
+        audio_guestbook_data.mode = mode;
+        audio_guestbook_data.recordings = number_of_recordings;
+        
+        ESP32SERIAL.write(sizeof audio_guestbook_data);     // number of bytes in the structure
+        Serial.print("Sending data do Admin Monitor Application: "); // debug
+        Serial.println(sizeof audio_guestbook_data);
+        Serial.print("Mode: "); Serial.println(audio_guestbook_data.mode);
+        Serial.print("Recordings: "); Serial.println(audio_guestbook_data.recordings);
+        Serial.print("Disk Remaining: "); Serial.println(audio_guestbook_data.disk_remaining);
+        ESP32SERIAL.write((byte*)&audio_guestbook_data, sizeof audio_guestbook_data);
+    }
+}
 
 /**
  * @brief Get the time from RTC (if available).
@@ -804,6 +840,10 @@ static void stop_recording(void) {
     file_object.close(); // Close the file
 
     Serial.println("Closed file");
+
+    // Get disk space left on SD card
+    audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
+
     mode = READY;
     print_mode();
 }
