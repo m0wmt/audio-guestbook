@@ -10,17 +10,40 @@
 // Load Wi-Fi library
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-//#include <WebServer.h>
 #include <WiFi.h>
 
 #include "../include/index.h"
 #include "../include/config.h"
 
+#include <HardwareSerial.h>
+#include <inttypes.h>
+
 static String processor(const String &var);
-    
-// Replace with your network credentials
-//const char *ssid = "Guestbook-AP";
-//const char *password = "123456789"; // temp password!
+static void send_events_to_web_client(void);
+
+// Teensy UART communications setup
+// Define the RX and TX pins for Serial 2
+#define RX_TEENSY 16
+#define TX_TEENSY 17 // Will not be used but set up
+#define TEENSY_BAUD_RATE 9600
+    HardwareSerial teensy_serial(0);
+typedef struct __attribute__((packed, aligned(1))) {
+    uint8_t mode;
+    uint16_t recordings;
+    uint64_t disk_remaining;
+} teensy_data_t;
+
+teensy_data_t audio_guestbook_data;
+
+typedef enum { // State of the audio guestbook
+    ERROR,
+    INITIALISING,
+    READY,
+    RECORDMESSAGEPROMPT,
+    RECORDING,
+    PLAYING
+} button_mode_t;
+// end of teensy information setup
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -28,12 +51,8 @@ AsyncWebServer server(80);
 // Create an Event Source on /events
 AsyncEventSource events("/events");
 
-// Timer variables
+// Variables
 unsigned long last_time = 0;
-unsigned long timer_delay = 30000;
-float disk_space = 14.0;
-unsigned int recordings = 7;
-unsigned int status = 1;
 char runtime_buffer[10];
 
 
@@ -94,56 +113,101 @@ void setup() {
 
     // Set up run time buffer to 5 seconds, waiting time above!
     sprintf(runtime_buffer, "%02d:%02d:%02d", 0, 0, 5);
+
+    // Set up UART communications (UART0) to Teensy. Rx only will be used,
+    // there will be no transmit to the Teensy
+    teensy_serial.begin(TEENSY_BAUD_RATE, SERIAL_8N1);
+
+    audio_guestbook_data.disk_remaining = 0;
+    audio_guestbook_data.recordings = 0;
+    audio_guestbook_data.mode = INITIALISING;
 }
 
 void loop() {
-    if ((millis() - last_time) > timer_delay) {
-        disk_space -= 0.05;
-        recordings += 1;
-        Serial.printf("Disk Space = %.2f Gb", disk_space);
-        Serial.println();
-        Serial.printf("Recordings= %d", recordings);
-        Serial.println();
-        Serial.printf("Status = %d", status);
-        Serial.println();
+    if (teensy_serial.available() > 0) {
+        // // get the byte of data from the Teensy
+        byte n = teensy_serial.available();
+        {
+            if (n != 0) {
+                if (n >= 4) {
+                    // Serial.println(n);//debugg
+                    uint32_t syncPatt = (uint32_t)teensy_serial.read() << 24 | (uint32_t)teensy_serial.read() << 16 |
+                                        (uint32_t)teensy_serial.read() << 8 | teensy_serial.read();
+                    Serial.print("Sync: "); Serial.println(syncPatt, HEX);//debug
+                    delay(10); // without delay, the Receiver does not work! Why?
+                    if (syncPatt == 0xDEADBEEF) {
+                        byte p = teensy_serial.read(); // number of bytes in struct
+                        byte m = teensy_serial.readBytes((byte *)&audio_guestbook_data, p);
+                        
+                        // Debug only printing
+                        Serial.print("Mode = ");
+                        switch (audio_guestbook_data.mode) {
+                            case ERROR:
+                                Serial.print("ERROR");
+                                break;
 
-        // Send Events to the Web Client with the Sensor Readings
-        events.send("ping", NULL, millis());
-        events.send(String(disk_space).c_str(), "diskspace", millis());
+                            case INITIALISING:
+                                Serial.print("INITIALISING");
+                                break;
 
-        if (status == 1)
-            events.send("OK", "status", millis());
-        else
-            events.send("ERROR", "status", millis());
+                            case READY:
+                                Serial.print("READY");
+                                break;
 
-        events.send(String(recordings).c_str(), "recordings", millis());
+                            case RECORDMESSAGEPROMPT:
+                                Serial.print("RECORDMESSAGEPROMPT");
+                                break;
 
-        last_time = millis();
+                            case RECORDING:
+                                Serial.print("RECORDING");
+                                break;
 
-        sprintf(runtime_buffer, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
-                ((last_time / 1000) % 3600) % 60);
+                            case PLAYING:
+                                Serial.print("PLAYING");
+                                break;
 
-        Serial.print("Run time: ");
-        Serial.println(runtime_buffer);
-        events.send(String(runtime_buffer), "runtime", millis());
+                            default:
+                                Serial.print("UNDEFINED");
+                                break;
+                        }
+
+                        Serial.print("   ");
+                        Serial.print("Recordings = ");
+                        Serial.print(audio_guestbook_data.recordings);
+                        Serial.print("   ");
+                        Serial.print("Disk Remaining = ");
+                        Serial.print(audio_guestbook_data.disk_remaining);
+                        Serial.println(' ');
+                        Serial.println("===========================");
+
+                        send_events_to_web_client();
+                    }
+                }
+            }
+        }
     }
 }
 
 /**
- * @brief Handle requests from the web page
+ * @brief Handle requests from the web page.
  */
 static String processor(const String &var) {
     Serial.println(var);
     
     if (var == "DISKSPACE") {
-        return String(disk_space);
+        return String(audio_guestbook_data.disk_remaining);
     } else if (var == "STATUS") {
-        if (status == 1)
+        if (audio_guestbook_data.mode == READY || audio_guestbook_data.mode == INITIALISING) {
             return "OK";
-        else
+        } else if (audio_guestbook_data.mode == RECORDING || audio_guestbook_data.mode == RECORDMESSAGEPROMPT) {
+            return "RECORDING";
+        } else if (audio_guestbook_data.mode == PLAYING) {
+            return "PLAYING";
+        } else {
             return "ERROR";
+        }
     } else if (var == "RECORDINGS") {
-        return String(recordings);
+        return String(audio_guestbook_data.recordings);
     } else if (var == "RUNTIME") {
         return String(runtime_buffer);
     }
@@ -151,3 +215,32 @@ static String processor(const String &var) {
     return String();
 }
 
+/**
+ * @brief Send events to the web client so they can be viewed on the web page.
+ */
+static void send_events_to_web_client(void) {
+    events.send("ping", NULL, millis());
+    events.send(String(audio_guestbook_data.disk_remaining).c_str(), "diskspace", millis());
+
+    if (audio_guestbook_data.mode == READY || audio_guestbook_data.mode == INITIALISING) {
+        events.send("OK", "status", millis());
+    } else if (audio_guestbook_data.mode == RECORDING || audio_guestbook_data.mode == RECORDMESSAGEPROMPT) {
+        events.send("RECORDING", "status", millis());
+    } else if (audio_guestbook_data.mode == PLAYING) {
+        events.send("PLAYING", "status", millis());
+    } else {
+        events.send("ERROR", "status", millis());
+    }
+
+    events.send(String(audio_guestbook_data.recordings).c_str(), "recordings", millis());
+
+    // So the user knows the application is still running!
+    last_time = millis();
+
+    sprintf(runtime_buffer, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
+            ((last_time / 1000) % 3600) % 60);
+
+    Serial.print("Run time: ");
+    Serial.println(runtime_buffer);
+    events.send(String(runtime_buffer), "runtime", millis());
+}

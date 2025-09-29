@@ -27,7 +27,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         <p style="color:rgb(10, 66, 64);">RECORDINGS</p><p><span class="reading"><span id="rec">%RECORDINGS%</span></span></p>
       </div>
       <div class="card">
-        <p style="color:rgb(10, 66, 64);">DISK SPACE REMAINING</p><p><span class="reading"><span id="disk">%DISKSPACE%</span> Gb</span></p>
+        <p style="color:rgb(10, 66, 64);">DISK SPACE REMAINING</p><p><span class="reading"><span id="disk">%DISKSPACE%</span> Bytes</span></p>
       </div>
       <div class="card">
         <p style="color:rgb(10, 66, 64);">RUN TIME</p>
