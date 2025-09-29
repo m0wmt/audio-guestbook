@@ -125,7 +125,7 @@ Been a while but starting to work now on the admin monitor. Using serial8 on the
 Eventually had some time to work on the admin monitor.  Now that we have batteries available (2 x 24v from an electric buggy) I am going to concentrate on the wi-fi option for
 the admin application as I like the view I can show on my phone.  Will need to test at some point how far wi-fi will reach from an ESP32. 
 
-Wi-fi version now working. Sending data from the Teensy via Serial8 to the ESP32 and then displaying the information on the web page that the ESP32 is publishing.  Could do more on it but it's working so happy for now.
+Wi-fi version now working. Sending data from the Teensy via Serial8 to the ESP32 and then displaying the information on the web page that the ESP32 is publishing.  Could do more on it but it's working so happy for now. <img src="./images/admin-page.jpg" alt="Admin Page" height="400">
 
 Haven't been able to upload to the Teensy reliably since a Linux (Mint) update so started up the Windows laptop and worked on there for the Teensy part.  Not sure if it was the update that stopped it working (USB issues) but spent too much time trying to get it to work so went the easy route for now.
 
