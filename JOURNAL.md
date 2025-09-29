@@ -106,7 +106,7 @@ Using an ESP32-S3 mini MCU may not be the best, having issues with Linux and USB
 
 Spent some time on the guestbook monitor program today, takes longer than you think to create an access point web page! Now have a web page via the ESP32 which updates every 30 seconds (currently) giving you and overview of the firmware status, number of recordings and disk space left on the SD card.
 
-<img src="./images/monitor.png" alt="Monitor" height="400">
+<img src="./images/monitor.png" alt="Monitor" height="300">
 
 Need to work now on connecting the Teensy and ESP32 so that the Teensy can update the ESP32 (if it's connected/running) with it's status, disk space and number of recordings. Might add other information but that's the minimum I want for now.
 
@@ -137,9 +137,10 @@ Haven't been able to upload to the Teensy reliably since a Linux (Mint) update s
 * Play sound when program starts up - Done.
 * Play message to user to record after the beep = Partially done.
 * Download Audacity to the PC for recording WAV files and playing them back - Done and tested.
-* Program startup logic, handset not on phone, no SD card etc. No SD card done.
+* Program startup logic, handset not on phone, no SD card etc. No SD card - Done.
 * Program logic of handset/PRESS button - In progress.
 * Handle possible errors.
-* Can we use the telephone dial to carry out actions?
+* Can we use the telephone dial to carry out actions - not this version.
 * Use [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) C coding standards - In progress.
-* Replace original microphone with an electret one. Waiting on manufacture of the replacement microphone housing - request sent to 3D offsite manufacturer.
+* Replace original microphone with an electret one. Waiting on manufacture of the replacement microphone housing - Done.
+* Admin monitor application and communication from Teensy to that application (ESP32) - Done.
