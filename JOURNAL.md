@@ -129,6 +129,8 @@ Wi-fi version now working. Sending data from the Teensy via Serial8 to the ESP32
 
 Haven't been able to upload to the Teensy reliably since a Linux (Mint) update so started up the Windows laptop and worked on there for the Teensy part.  Not sure if it was the update that stopped it working (USB issues) but spent too much time trying to get it to work so went the easy route for now. 
 
+Soldered the admin monitor ESP32 with the 2 wires required, UART RX (from Teensy TX) and the common GND between the ESP32 and the Teensy.  Need to talk to my electrical drawer for a new circuit :-).  Fitted it in a nice small case that I printed on our Elegoo Centauri Carbon 3D printer so it'll be electrically safe when inside the phone encloser.  Used a model created by [pm3dka](https://www.thingiverse.com/thing:6653126) on thingiverse.  <img src="./images/admin-monitor.jpeg" alt="Admin Monitor ESP32" height="200">
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
