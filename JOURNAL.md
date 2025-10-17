@@ -131,6 +131,10 @@ Haven't been able to upload to the Teensy reliably since a Linux (Mint) update s
 
 Soldered the admin monitor ESP32 with the 2 wires required, UART RX (from Teensy TX) and the common GND between the ESP32 and the Teensy.  Need to talk to my electrical drawer for a new circuit :-).  Fitted it in a nice small case that I printed on our Elegoo Centauri Carbon 3D printer so it'll be electrically safe when inside the phone encloser.  Used a model created by [pm3dka](https://www.thingiverse.com/thing:6653126) on thingiverse.  <img src="./images/admin-monitor.jpeg" alt="Admin Monitor ESP32" height="200">
 
+Thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant) for the new wiring diagram now with the ESP32 connections included.
+
+Currently (October 2025) designing (with OnShape) a box that I will 3D print to connect the 12v battery we now have available to the boards via a cigarette lighter with a USB charging connector.  Images to follow once this has been perfected, currenlty in the test stage to get the size right.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
