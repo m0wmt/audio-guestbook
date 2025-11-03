@@ -135,15 +135,29 @@ Thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUser
 
 Currently (October 2025) designing (with OnShape) a box that I will 3D print to connect the 24v battery we now have available to the boards via a cigarette lighter with a USB charging connector.  Images to follow once this has been perfected, currenlty in the test stage to get the size right.
 
-Now November 2026, 24v connection box designed (STL files available in the /notes directory) and printed.  Also tested the battery (2x12v in series) connector with the cigarette lighter and both the Teensy and ESP32 powered from it, all working as it should do.  
+Now November 2026, 24v connection box designed (STL files available in the /notes directory) and printed.  Also tested the battery (2x12v in series) connector with the cigarette lighter and both the Teensy and ESP32 powered from it, all working as it should do.  Will probably just use 1 battery at a time (no idea yet if both will be needed on the day or not, have 4 available) as this uses less power (and less heat) to convert from 12v to 5v vis 24v to 5v. 
+
+Power connection box - open:
+
+<img src="./images/power-open.jpeg" alt="Power Connection Box - Open" height="200">
+
+Power connection box - battery connector: 
+
+<img src="./images/power-battery.jpeg" alt="Power Connection Box - Battery Connector" height="200">
+
+Power connection box - cigarette lighter -> Teensy/ESP32: 
+
+<img src="./images/power-5v.jpeg" alt="Power Connection Box - Teensy/ESP" height="200">
+
+A couple of design issues with the power connection box that I'd redesign if I had to do it again but overall I'm happy with the outcome.  Now waiting on a [connection crimper](https://www.amazon.co.uk/IWISS-Crimping-0-08-1-0-Ratcheting-Connector/dp/B01N4L8QMW) and some [Dupon connectors](https://www.amazon.co.uk/YIXISI-Connector-Replacing-Repairing-Connectors/dp/B08JV8G5YN) so I can wire up the phone to the micro processors. 
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
 * RTC using a button battery - Done.
-* Record message via handset speaker.  Need to wait for right angle connectors to arrive before doing the MIC, only way to test that will be to speak in to it! - Partially done.
+* Record message via handset speaker.  Need to wait for right angle connectors to arrive before doing the MIC, only way to test that will be to speak in to it! - Partially done, now need the bride and groom to record the message.
 * Play sound when program starts up - Done.
-* Play message to user to record after the beep = Partially done.
+* Play message to user to record after the beep = Done.
 * Download Audacity to the PC for recording WAV files and playing them back - Done and tested.
 * Program startup logic, handset not on phone, no SD card etc. No SD card - Done.
 * Program logic of handset/PRESS button - In progress.
