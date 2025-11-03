@@ -135,7 +135,7 @@ Thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUser
 
 Currently (October 2025) designing (with OnShape) a box that I will 3D print to connect the 24v battery we now have available to the boards via a cigarette lighter with a USB charging connector.  Images to follow once this has been perfected, currenlty in the test stage to get the size right.
 
-Now November 2026, 24v connection box designed (STL files available in the /notes directory) and printed.  Also tested the battery (2x12v in series) connector with the cigarette lighter and both the Teensy and ESP32 powered from it, all working as it should do.  Will probably just use 1 battery at a time (no idea yet if both will be needed on the day or not, have 4 available) as this uses less power (and less heat) to convert from 12v to 5v vis 24v to 5v. 
+Now November 2025; Battery connection box designed (STL files available in the /notes directory) and printed.  Also tested the battery (2x12v in series) connector with the cigarette lighter and both the Teensy and ESP32 powered from it, all working as it should do.  Will probably just use 1 battery at a time (no idea yet if both will be needed on the day or not, have 4 available) as this uses less power (and less heat) to convert from 12v to 5v vis 24v to 5v.  Need to calculate the power draw of both boards before deciding on what battery(s) to use.
 
 Power connection box - open:
 
