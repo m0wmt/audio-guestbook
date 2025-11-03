@@ -149,7 +149,7 @@ Power connection box - cigarette lighter -> Teensy/ESP32:
 
 <img src="./images/power-5v.jpeg" alt="Power Connection Box - Teensy/ESP" height="200">
 
-A couple of design issues with the power connection box that I'd redesign if I had to do it again but overall I'm happy with the outcome.  Now waiting on a [connection crimper](https://www.amazon.co.uk/IWISS-Crimping-0-08-1-0-Ratcheting-Connector/dp/B01N4L8QMW) and some [Dupon connectors](https://www.amazon.co.uk/YIXISI-Connector-Replacing-Repairing-Connectors/dp/B08JV8G5YN) so I can wire up the phone to the micro processors. 
+A couple of design issues with the power connection box that I'd redesign if I had to do it again but overall I'm happy with the outcome.  Now waiting on a [connection crimper](https://www.amazon.co.uk/IWISS-Crimping-0-08-1-0-Ratcheting-Connector/dp/B01N4L8QMW) and some [Dupont connectors](https://www.amazon.co.uk/YIXISI-Connector-Replacing-Repairing-Connectors/dp/B08JV8G5YN) so I can wire up the phone to the micro processors. 
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
