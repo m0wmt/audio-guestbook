@@ -133,7 +133,9 @@ Soldered the admin monitor ESP32 with the 2 wires required, UART RX (from Teensy
 
 Thanks to my [wife](https://www.redbubble.com/people/quirkytales/shop?artistUserName=quirkytales&collections=1925754&iaCode=all-departments&sortOrder=relevant) for the new wiring diagram now with the ESP32 connections included.
 
-Currently (October 2025) designing (with OnShape) a box that I will 3D print to connect the 12v battery we now have available to the boards via a cigarette lighter with a USB charging connector.  Images to follow once this has been perfected, currenlty in the test stage to get the size right.
+Currently (October 2025) designing (with OnShape) a box that I will 3D print to connect the 24v battery we now have available to the boards via a cigarette lighter with a USB charging connector.  Images to follow once this has been perfected, currenlty in the test stage to get the size right.
+
+Now November 2026, 24v connection box designed (STL files available in the /notes directory) and printed.  Also tested the battery (2x12v in series) connector with the cigarette lighter and both the Teensy and ESP32 powered from it, all working as it should do.  
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
