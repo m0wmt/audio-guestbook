@@ -151,6 +151,12 @@ Power connection box - cigarette lighter -> Teensy/ESP32:
 
 A couple of design issues with the power connection box that I'd redesign if I had to do it again but overall I'm happy with the outcome.  Now waiting on a [connection crimper](https://www.amazon.co.uk/IWISS-Crimping-0-08-1-0-Ratcheting-Connector/dp/B01N4L8QMW) and some [Dupont connectors](https://www.amazon.co.uk/YIXISI-Connector-Replacing-Repairing-Connectors/dp/B08JV8G5YN) so I can wire up the phone to the micro processors. 
 
+Crimper arrived; crimping small wires in to small connectors is not the easiest thing to do!  20AWG wires in to the Dupont connectors works but putting them in to the connectors isn't so easy, for that and 18AWG bigger connectors are needed.  Crimping photo's for completeness :-)
+
+<img src="./images/crimp1.jpg" alt="Crimp No.1" height="275"> <img src="./images/crimp2.jpg" alt="Crimp No. 2" height="275"> <img src="./images/crimp3.jpg" alt="Crimp No. 3" height="275">
+
+Now all I need to do is to try and fit everything back in to the phone and put the case on for next phase of testing. Of the 4 x 12v batteries I have 3 of them seem to be okay (12.5v +) and one isn't so well (7.6v), just need to find a 12v battery charger (the one that came with the batteries is 24v) to see if we can rescue it.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
@@ -162,7 +168,8 @@ A couple of design issues with the power connection box that I'd redesign if I h
 * Program startup logic, handset not on phone, no SD card etc. No SD card - Done.
 * Program logic of handset/PRESS button - In progress.
 * Handle possible errors.
-* Can we use the telephone dial to carry out actions - not this version.
+* Can we use the telephone dial to carry out actions - not this version. It is possible but no requirement now.
 * Use [Barr Group](https://barrgroup.com/sites/default/files/barr_c_coding_standard_2018.pdf) C coding standards - In progress.
 * Replace original microphone with an electret one. Waiting on manufacture of the replacement microphone housing - Done.
-* Admin monitor application and communication from Teensy to that application (ESP32) - Done.
+* Admin monitor application (WiFi) and communication from Teensy to that application (ESP32) - Done.
+* Admin monitor application (Bluetooth) and communication from Teensy to that application (ESP32) - ToDo.
