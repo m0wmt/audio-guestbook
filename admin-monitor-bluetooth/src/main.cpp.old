@@ -1,0 +1,279 @@
+#include <Arduino.h>
+
+#include <HardwareSerial.h>
+#include <inttypes.h>
+
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+
+#define SERVICE_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066363"
+#define DISKSPACE_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066364"       // Disk space
+#define RECORDINGS_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066365"      // Recordings
+#define MODE_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066366"            // Mode
+
+#define RED_LED 48
+
+// Teensy UART communications setup
+// Define the RX and TX pins for Serial 2
+#define RX_TEENSY 16
+#define TX_TEENSY 17 // Will not be used but set up
+#define TEENSY_BAUD_RATE 9600
+HardwareSerial teensy_serial(0);
+typedef struct __attribute__((packed, aligned(1))) {
+    uint8_t mode;
+    uint16_t recordings;
+    uint64_t disk_remaining;
+} teensy_data_t;
+
+teensy_data_t audio_guestbook_data;
+
+typedef enum { // State of the audio guestbook
+    ERROR,
+    INITIALISING,
+    READY,
+    RECORDMESSAGEPROMPT,
+    RECORDING,
+    PLAYING
+} button_mode_t;
+// end of teensy information setup
+
+typedef struct {
+    byte flags;
+    uint8_t mode;
+    uint16_t recordings;
+    uint64_t disk_remaining;
+} bluetooth_data_t;
+
+bluetooth_data_t ble_data_t;
+
+
+uint64_t disk_space = 1400000000;
+uint32_t recordings = 0;
+bool deviceConnected = false;
+bool oldDeviceConnected = true;
+
+BLECharacteristic *diskspaceCharacteristic = NULL;
+BLECharacteristic *recordingsCharacteristic = NULL;
+BLECharacteristic *modeCharacteristic = NULL;
+BLEServer *pServer = NULL;
+BLEService *pService = NULL;
+
+
+
+class MyServerCallbacks : public BLEServerCallbacks {
+    void onConnect(BLEServer *pServer) { deviceConnected = true; };
+    void onDisconnect(BLEServer *pServer) { deviceConnected = false; }
+};
+
+// Variables
+unsigned long last_time = 0;
+char runtime_buffer[10];
+
+void setup() {
+    // pinMode(48, OUTPUT);
+    //     pinMode(33, OUTPUT);
+
+    Serial.begin(115200);
+
+    delay(3000);
+
+    Serial.println(F("\n##################################"));
+    Serial.println(F("ESP32 Information:"));
+    Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(),
+                  ESP.getHeapSize() - ESP.getFreeHeap(), ESP.getFreeHeap());
+    Serial.printf("Sketch Size %d, Free Sketch Space %d\n", ESP.getSketchSize(), ESP.getFreeSketchSpace());
+    Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+    Serial.printf("Chip Model %s, ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipModel(),
+                  ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
+    Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
+    Serial.println(F("##################################\n\n"));
+
+    Serial.println("Starting BLE work!");
+
+    BLEDevice::init("Audio Guestbook");
+    pServer = BLEDevice::createServer();
+    pService = pServer->createService(SERVICE_UUID);
+
+    diskspaceCharacteristic =
+        pService->createCharacteristic(DISKSPACE_UUID,
+                                       BLECharacteristic::PROPERTY_READ | // BLECharacteristic::PROPERTY_WRITE |
+                                           BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE);
+    diskspaceCharacteristic->setValue("Disk Space");
+
+    recordingsCharacteristic = pService->createCharacteristic(
+        RECORDINGS_UUID,
+        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE);
+    recordingsCharacteristic->setValue("Recordings");
+
+    modeCharacteristic = pService->createCharacteristic(
+        MODE_UUID,
+        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE);
+    modeCharacteristic->setValue("Mode");
+
+    pService->start();
+
+    // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(SERVICE_UUID);
+    pAdvertising->setScanResponse(true);
+    pAdvertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
+    pAdvertising->setMinPreferred(0x12);
+    BLEDevice::startAdvertising();
+
+    Serial.println("Characteristic defined! Now you can read it in your phone!");
+
+    // Set up run time buffer to 5 seconds, waiting time above!
+    sprintf(runtime_buffer, "%02d:%02d:%02d", 0, 0, 5);
+
+    // Set up UART communications (UART0) to Teensy. Rx only will be used,
+    // there will be no transmit to the Teensy
+    teensy_serial.begin(TEENSY_BAUD_RATE, SERIAL_8N1);
+
+    audio_guestbook_data.disk_remaining = 0;
+    audio_guestbook_data.recordings = 0;
+    audio_guestbook_data.mode = INITIALISING;
+
+    // digitalWrite(RED_LED, LOW);
+}
+
+void loop() {
+    if (teensy_serial.available() > 0) {
+        // // get the byte of data from the Teensy
+        byte n = teensy_serial.available();
+        {
+            if (n != 0) {
+                if (n >= 4) {
+                    // Serial.println(n);//debugg
+                    uint32_t syncPatt = (uint32_t)teensy_serial.read() << 24 | (uint32_t)teensy_serial.read() << 16 |
+                                        (uint32_t)teensy_serial.read() << 8 | teensy_serial.read();
+                    Serial.print("Sync: ");
+                    Serial.println(syncPatt, HEX); // debug
+                    delay(10);                     // without delay, the Receiver does not work! Why?
+                    if (syncPatt == 0xDEADBEEF) {
+                        byte p = teensy_serial.read(); // number of bytes in struct
+                        byte m = teensy_serial.readBytes((byte *)&audio_guestbook_data, p);
+
+                        // Debug only printing
+                        Serial.print("Mode = ");
+                        switch (audio_guestbook_data.mode) {
+                        case ERROR:
+                            Serial.print("ERROR");
+                            break;
+
+                        case INITIALISING:
+                            Serial.print("INITIALISING");
+                            break;
+
+                        case READY:
+                            Serial.print("READY");
+                            break;
+
+                        case RECORDMESSAGEPROMPT:
+                            Serial.print("RECORDMESSAGEPROMPT");
+                            break;
+
+                        case RECORDING:
+                            Serial.print("RECORDING");
+                            break;
+
+                        case PLAYING:
+                            Serial.print("PLAYING");
+                            break;
+
+                        default:
+                            Serial.print("UNDEFINED");
+                            break;
+                        }
+
+                        Serial.print("   ");
+                        Serial.print("Recordings = ");
+                        Serial.print(audio_guestbook_data.recordings);
+                        Serial.print("   ");
+                        Serial.print("Disk Remaining = ");
+                        Serial.print(audio_guestbook_data.disk_remaining);
+                        Serial.println(' ');
+                        Serial.println("===========================");
+                        Serial.println("= NOW TX VIA BLUETOOTH =");
+
+                        //send_events_to_web_client();
+                    }
+                }
+            }
+        }
+    }
+
+    // put your main code here, to run repeatedly:
+    // notify changed value
+    // if (deviceConnected) {
+    // recordingsCharacteristic->setValue(String(recordings).c_str());
+    // recordingsCharacteristic->notify();
+
+    // diskspaceCharacteristic->setValue(String(disk_space).c_str());
+    // diskspaceCharacteristic->notify();
+
+    // modeCharacteristic->setValue("MODE");
+    // modeCharacteristic->notify();
+
+    ble_data_t.flags = 0b00001110;
+    ble_data_t.disk_remaining = disk_space;
+    ble_data_t.recordings = recordings;
+    ble_data_t.mode = 0;
+    recordingsCharacteristic->setValue(ble_data_t, 4);
+
+    Serial.print("New values notified: ");
+    Serial.print(disk_space); 
+    Serial.print(", "); 
+    Serial.println(recordings);
+    
+    recordings += 1;
+    disk_space -= 5;
+
+    delay(5000); // bluetooth stack will go into congestion if too many packets are sent
+    //}
+
+    // disconnecting
+    if (!deviceConnected && oldDeviceConnected) {
+        Serial.println("Device disconnected.");
+        delay(500);                  // give the bluetooth stack the chance to get things ready
+        pServer->startAdvertising(); // restart advertising
+        Serial.println("Start advertising");
+        oldDeviceConnected = false;
+    }
+
+    // connecting
+    if (deviceConnected && !oldDeviceConnected) {
+        oldDeviceConnected = deviceConnected;
+        Serial.println("Device Connected");
+    }
+}
+
+/**
+ * @brief Send events to the web client so they can be viewed on the web page.
+ */
+// static void send_events_to_web_client(void) {
+//     events.send("ping", NULL, millis());
+//     events.send(String(audio_guestbook_data.disk_remaining).c_str(), "diskspace", millis());
+
+//     if (audio_guestbook_data.mode == READY || audio_guestbook_data.mode == INITIALISING) {
+//         events.send("OK", "status", millis());
+//     } else if (audio_guestbook_data.mode == RECORDING || audio_guestbook_data.mode == RECORDMESSAGEPROMPT) {
+//         events.send("RECORDING", "status", millis());
+//     } else if (audio_guestbook_data.mode == PLAYING) {
+//         events.send("PLAYING", "status", millis());
+//     } else {
+//         events.send("ERROR", "status", millis());
+//     }
+
+//     events.send(String(audio_guestbook_data.recordings).c_str(), "recordings", millis());
+
+//     // So the user knows the application is still running!
+//     last_time = millis();
+
+//     sprintf(runtime_buffer, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
+//             ((last_time / 1000) % 3600) % 60);
+
+//     Serial.print("Run time: ");
+//     Serial.println(runtime_buffer);
+//     events.send(String(runtime_buffer), "runtime", millis());
+// }

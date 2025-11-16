@@ -1,127 +1,168 @@
+
+/*
+ *
+ * This sketch emulates parts of a Polar H7 Heart Rate Sensor.
+ * It exposes the Heart rate and the Sensor position characteristics
+
+   Copyright <2017> <Andreas Spiess>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+   Based on Neil Kolban's example file: https://github.com/nkolban/ESP32_BLE_Arduino
+ */
+/*
+https://circuitdigest.com/microcontroller-projects/esp32-ble-server-how-to-use-gatt-services-for-battery-level-indication
+
+https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Assigned_Numbers/out/en/Assigned_Numbers.pdf
+service by UUID
+0x1801 - GATT service
+0x183F - elapsed time service
+0x180A - device information service
+0x181C - user data service
+0x183B - binary sensor service
+0x184C - generic telephone bearer service
+0x184E - audio stream control service
+0x1853 - common audio service
+0x1855 - telephony and media audio service
+0x1856 - public broadcast announcement service
+0x185A - industrial measurement device service
+
+units by name
+time (day) 0x2762
+time (hour) 0x2761
+time (minute) 0x2760
+time (month) 0x27B4
+time (second) 0x2703
+time (year) 0x27B3
+parts per billion 0x27C5
+parts per million 0x27C4
+unitless 0x2700
+
+charaistic by name
+alert status - 0x2A3F
+Audio Input Control Point 0x2B7B
+Audio Input Description 0x2B7C
+Audio Input State 0x2B77
+Audio Input Status 0x2B7A
+Audio Input Type 0x2B79
+Audio Location 0x2B81
+Audio Output Description 0x2B83
+Device Name 0x2A00
+Object Size 0x2AC0
+Current Track Object ID 0x2B9D
+Track Changed 0x2B96
+Track Duration 0x2B98
+Track Position 0x2B99
+Track Title 0x2B97
+
+Context type
+0x0004 Media
+
+*/
 #include <Arduino.h>
 
+#include <HardwareSerial.h>
+#include <inttypes.h>
+
+#include <BLE2902.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 
-#define SERVICE_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066363"
-#define CHARACTERISTIC_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066364"
-#define RECORDINGS_UUID "ba1faa6e-1c9f-4475-9bbf-b84815066365"
+char bluetooth_buffer[120];
 
-#define RED_LED 48
+bool _BLEClientConnected = false;
+#define DeviceInformationService BLEUUID((uint16_t)0x181C)
 
-uint64_t disk_space = 1400000000;
-unsigned int recordings = 0;
-bool deviceConnected = false;
-bool oldDeviceConnected = true;
+// BLECharacteristic SizeCharacteristic(BLEUUID((uint16_t)0x2A8E), BLECharacteristic::PROPERTY_READ |
+//                                                                                  BLECharacteristic::PROPERTY_NOTIFY);
+// BLEDescriptor SizeDescriptor(BLEUUID((uint16_t)0x2A8E));
 
-BLECharacteristic *pCharacteristic = NULL;
-BLECharacteristic *recordingsCharacteristic = NULL;
-BLEServer *pServer = NULL;
-BLEService *pService = NULL;
+// BLECharacteristic RecordingCharacteristic(BLEUUID((uint16_t)0x2B9D),
+//                                           BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+// BLEDescriptor RecordingDescriptor(BLEUUID((uint16_t)0x2B9D));
+
+// BLECharacteristic StatusCharacteristic(BLEUUID((uint16_t)0x2B2E),
+//                                        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+// BLEDescriptor StatusDescriptor(BLEUUID((uint16_t)0x2B2E));
+
+BLECharacteristic infoCharacteristic(BLEUUID((uint16_t)0x2AF4),
+                                     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+BLEDescriptor infoDescriptor(BLEUUID((uint16_t)0x2AF4));
 
 class MyServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer *pServer) { deviceConnected = true; };
-
-    void onDisconnect(BLEServer *pServer) { deviceConnected = false; }
+    void onConnect(BLEServer *pServer) { _BLEClientConnected = true; };
+    void onDisconnect(BLEServer *pServer) { _BLEClientConnected = false; }
 };
+void InitBLE() {
+    BLEDevice::init("BLE Guestbook");
+    // Create the BLE Server
+    BLEServer *pServer = BLEDevice::createServer();
+    pServer->setCallbacks(new MyServerCallbacks());
+    // Create the BLE Service
+    BLEService *pService = pServer->createService(DeviceInformationService);
 
-void setup() {
-    // pinMode(48, OUTPUT);
-    //     pinMode(33, OUTPUT);
+    // Set up run time buffer
+    // sprintf(runtime_buffer, "%02d:%02d:%02d", 0, 0, 5);
 
-    Serial.begin(115200);
+    // pService->addCharacteristic(&SizeCharacteristic);
+    // SizeDescriptor.setValue("Size");
+    // SizeCharacteristic.addDescriptor(&SizeDescriptor);
+    // //SizeCharacteristic.addDescriptor(new BLE2902());
 
-    delay(3000);
+    // pService->addCharacteristic(&RecordingCharacteristic);
+    // RecordingDescriptor.setValue("Recording");
+    // RecordingCharacteristic.addDescriptor(&RecordingDescriptor);
+    // //RecordingCharacteristic.addDescriptor(new BLE2902());
 
-    Serial.println(F("\n##################################"));
-    Serial.println(F("ESP32 Information:"));
-    Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(),
-                  ESP.getHeapSize() - ESP.getFreeHeap(), ESP.getFreeHeap());
-    Serial.printf("Sketch Size %d, Free Sketch Space %d\n", ESP.getSketchSize(), ESP.getFreeSketchSpace());
-    Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
-    Serial.printf("Chip Model %s, ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipModel(),
-                  ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
-    Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
-    Serial.println(F("##################################\n\n"));
+    // pService->addCharacteristic(&StatusCharacteristic);
+    // StatusDescriptor.setValue("Status");
+    // StatusCharacteristic.addDescriptor(&StatusDescriptor);
+    // //StatusCharacteristic.addDescriptor(new BLE2902());
 
-    Serial.println("Starting BLE work!");
+    pService->addCharacteristic(&infoCharacteristic);
+    infoDescriptor.setValue("Guestbook Status");
+    infoCharacteristic.addDescriptor(&infoDescriptor);
+//    infoCharacteristic.addDescriptor(new BLE2902());
 
-    BLEDevice::init("Audio Guestbook");
-    pServer = BLEDevice::createServer();
-    pService = pServer->createService(SERVICE_UUID);
-
-    pCharacteristic =
-        pService->createCharacteristic(CHARACTERISTIC_UUID,
-                                       BLECharacteristic::PROPERTY_READ | // BLECharacteristic::PROPERTY_WRITE |
-                                           BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE);
-
-    pCharacteristic->setValue("Disk Space");
-
-    recordingsCharacteristic = pService->createCharacteristic(
-        RECORDINGS_UUID,
-        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE);
-    recordingsCharacteristic->setValue("Recordings");
-
+    pServer->getAdvertising()->addServiceUUID(DeviceInformationService);
+    pServer->getAdvertising()->setScanResponse(true);
+    pServer->getAdvertising()->setMinPreferred(0x06);   // to help with iPhone connection issues
+    pServer->getAdvertising()->setMinPreferred(0x12);
     pService->start();
-
-    // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERVICE_UUID);
-    pAdvertising->setScanResponse(true);
-    pAdvertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
-    pAdvertising->setMinPreferred(0x12);
-    BLEDevice::startAdvertising();
-
+    // Start advertising
+    pServer->getAdvertising()->start();
+}
+void setup() {
+    Serial.begin(115200);
+    InitBLE();
     Serial.println("Characteristic defined! Now you can read it in your phone!");
-
-    // digitalWrite(RED_LED, LOW);
 }
 
+uint8_t level = 57;
+uint8_t track = 1;
 void loop() {
-    // put your main code here, to run repeatedly:
-    // notify changed value
-    // if (deviceConnected) {
-    pCharacteristic->setValue(String(disk_space).c_str());
-    pCharacteristic->notify();
-    recordingsCharacteristic->setValue(String(recordings).c_str());
-    recordingsCharacteristic->notify();
+    sprintf(bluetooth_buffer, "STATUS: Recording; Recordings %d; Disk Space %d Bytes; Runtime 01:02:%02d", level, track, track);
+    infoCharacteristic.setValue(bluetooth_buffer);
+    infoCharacteristic.notify();
 
-    Serial.print("New values notified: ");
-    Serial.print(disk_space); 
-    Serial.print(", "); 
-    Serial.println(recordings);
-    
-    recordings += 1;
-    disk_space -= 5;
-
-    delay(5000); // bluetooth stack will go into congestion if too many packets are sent
-    //}
-
-    // disconnecting
-    if (!deviceConnected && oldDeviceConnected) {
-        Serial.println("Device disconnected.");
-        delay(500);                  // give the bluetooth stack the chance to get things ready
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("Start advertising");
-        oldDeviceConnected = false;
-    }
-
-    // connecting
-    if (deviceConnected && !oldDeviceConnected) {
-        oldDeviceConnected = deviceConnected;
-        Serial.println("Device Connected");
-    }
-
-    // delay(10000);
-
-    // disk_space -= 0.1;
-    // recordings += 1;
-    // Serial.printf("Disk Space = %.2f Gb", disk_space);
-    // Serial.println();
-    // Serial.printf("Recordings= %d", recordings);
-    // Serial.println();
-
-    // pCharacteristic->setValue(String(disk_space).c_str());
-    // pCharacteristic->notify();
+    delay(5000);
+    level++;
+    track++;
+    Serial.println(int(level));
+    if (int(level) == 100)
+        level = 0;
+    if (int(track) == 59)
+        track = 0;
 }
