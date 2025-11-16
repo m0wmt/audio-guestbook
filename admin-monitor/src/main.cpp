@@ -75,6 +75,15 @@ void setup() {
     Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
     Serial.println(F("##################################\n\n"));
 
+    // Change CPU frequency to save power!
+
+    Serial.println(F("\n##################################"));
+    Serial.printf("Changing CPU frequency to 80MHz to save power\n");
+    setCpuFrequencyMhz(80);
+    Serial.printf("Cpu Freq Now %dMHz\n", ESP.getCpuFreqMHz());
+    Serial.println(F("##################################\n\n"));
+    delay(1000);    // Just to give time for everything to settle down
+
     // Connect to Wi-Fi network with SSID and password
     Serial.println("Setting AP (Access Point)…");
 
@@ -197,12 +206,14 @@ static String processor(const String &var) {
     if (var == "DISKSPACE") {
         return String(audio_guestbook_data.disk_remaining);
     } else if (var == "STATUS") {
-        if (audio_guestbook_data.mode == READY || audio_guestbook_data.mode == INITIALISING) {
-            return "OK";
+        if (audio_guestbook_data.mode == READY) {
+            return "READY";
         } else if (audio_guestbook_data.mode == RECORDING || audio_guestbook_data.mode == RECORDMESSAGEPROMPT) {
             return "RECORDING";
         } else if (audio_guestbook_data.mode == PLAYING) {
             return "PLAYING";
+        } else if (audio_guestbook_data.mode == INITIALISING) {
+            return "INITIALISING";
         } else {
             return "ERROR";
         }
@@ -222,12 +233,14 @@ static void send_events_to_web_client(void) {
     events.send("ping", NULL, millis());
     events.send(String(audio_guestbook_data.disk_remaining).c_str(), "diskspace", millis());
 
-    if (audio_guestbook_data.mode == READY || audio_guestbook_data.mode == INITIALISING) {
-        events.send("OK", "status", millis());
+    if (audio_guestbook_data.mode == READY) {
+        events.send("READY", "status", millis());
     } else if (audio_guestbook_data.mode == RECORDING || audio_guestbook_data.mode == RECORDMESSAGEPROMPT) {
         events.send("RECORDING", "status", millis());
     } else if (audio_guestbook_data.mode == PLAYING) {
         events.send("PLAYING", "status", millis());
+    } else if (audio_guestbook_data.mode == INITIALISING) {
+        events.send("INITIALISING", "status", millis());
     } else {
         events.send("ERROR", "status", millis());
     }
