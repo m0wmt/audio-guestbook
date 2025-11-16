@@ -155,7 +155,11 @@ Crimper arrived; crimping small wires in to small connectors is not the easiest 
 
 <img src="./images/crimp1.jpg" alt="Crimp No.1" height="275"> <img src="./images/crimp2.jpg" alt="Crimp No. 2" height="275"> <img src="./images/crimp3.jpg" alt="Crimp No. 3" height="275">
 
-Now all I need to do is to try and fit everything back in to the phone and put the case on for next phase of testing. Of the 4 x 12v batteries I have 3 of them seem to be okay (12.5v +) and one isn't so well (7.6v), just need to find a 12v battery charger (the one that came with the batteries is 24v) to see if we can rescue it.
+Now all I need to do is to try and fit everything back in to the phone and put the case on for next phase of testing - does fit but a bit tight.  
+
+Of the 4 x 12v batteries I have 3 of them seem to be okay (12.5v +) and one isn't so well (7.6v), just need to find a 12v battery charger (the one that came with the batteries is 24v) to see if we can rescue it.
+
+Had a look at bluetooth monitor but having issues with phone when I turn bluetooth on/off, doesn't reconnect to bluetooth on the ESP32 - probably something I'm not doing right!  Checked that WiFi option was still working, had a slight issue with the status message, spelt the flag in the index.h file wrong so it wasn't updating, fixed now :-)  Had a look at slowing the speed of the ESP32, it's only showing a web page to me so not doing much and slowing it down will save some power.  Changed the speed in the platform.ini file, could do it in code (which I did first) but here seems like the best place for it.
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
