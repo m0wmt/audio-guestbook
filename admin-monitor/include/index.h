@@ -21,7 +21,7 @@ const char MAIN_page[] PROGMEM = R"=====(
   <div class="content">
     <div class="cards">
       <div class="card">
-        <p style="color:rgb(10, 66, 64);">FIRMWARE</p><p><span class="reading"><span id="status">%STATUS%</span></span></p>
+        <p style="color:rgb(10, 66, 64);">FIRMWARE</p><p><span class="reading"><span id="stat">%STATUS%</span></span></p>
       </div>
       <div class="card">
         <p style="color:rgb(10, 66, 64);">RECORDINGS</p><p><span class="reading"><span id="rec">%RECORDINGS%</span></span></p>
