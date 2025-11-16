@@ -18,6 +18,8 @@
 #include <HardwareSerial.h>
 #include <inttypes.h>
 
+#define DEBUG true      // to turn on/off printf statements
+
 static String processor(const String &var);
 static void send_events_to_web_client(void);
 
@@ -64,25 +66,26 @@ void setup() {
 
     delay(5000);
 
-    Serial.println(F("\n##################################"));
-    Serial.println(F("ESP32 Information:"));
-    Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(),
-                  ESP.getHeapSize() - ESP.getFreeHeap(), ESP.getFreeHeap());
-    Serial.printf("Sketch Size %d, Free Sketch Space %d\n", ESP.getSketchSize(), ESP.getFreeSketchSpace());
-    Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
-    Serial.printf("Chip Model %s, ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipModel(),
-                  ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
-    Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
-    Serial.println(F("##################################\n\n"));
-
+    if (DEBUG) {
+        Serial.println(F("\n##################################"));
+        Serial.println(F("ESP32 Information:"));
+        Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(),
+                    ESP.getHeapSize() - ESP.getFreeHeap(), ESP.getFreeHeap());
+        Serial.printf("Sketch Size %d, Free Sketch Space %d\n", ESP.getSketchSize(), ESP.getFreeSketchSpace());
+        Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+        Serial.printf("Chip Model %s, ChipRevision %d, Cpu Freq %dMHz, SDK Version %s\n", ESP.getChipModel(),
+                    ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
+        Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
+        Serial.println(F("##################################\n\n"));
+    }
     // Change CPU frequency to save power!
 
-    Serial.println(F("\n##################################"));
-    Serial.printf("Changing CPU frequency to 80MHz to save power\n");
-    setCpuFrequencyMhz(80);
-    Serial.printf("Cpu Freq Now %dMHz\n", ESP.getCpuFreqMHz());
-    Serial.println(F("##################################\n\n"));
-    delay(1000);    // Just to give time for everything to settle down
+    // Serial.println(F("\n##################################"));
+    // Serial.printf("Changing CPU frequency to 80MHz to save power\n");
+    // setCpuFrequencyMhz(80);
+    // Serial.printf("Cpu Freq Now %dMHz\n", ESP.getCpuFreqMHz());
+    // Serial.println(F("##################################\n\n"));
+    // delay(1000);    // Just to give time for everything to settle down
 
     // Connect to Wi-Fi network with SSID and password
     Serial.println("Setting AP (Access Point)…");
@@ -180,14 +183,16 @@ void loop() {
                                 break;
                         }
 
-                        Serial.print("   ");
-                        Serial.print("Recordings = ");
-                        Serial.print(audio_guestbook_data.recordings);
-                        Serial.print("   ");
-                        Serial.print("Disk Remaining = ");
-                        Serial.print(audio_guestbook_data.disk_remaining);
-                        Serial.println(' ');
-                        Serial.println("===========================");
+                        if (DEBUG) {
+                            Serial.print("   ");
+                            Serial.print("Recordings = ");
+                            Serial.print(audio_guestbook_data.recordings);
+                            Serial.print("   ");
+                            Serial.print("Disk Remaining = ");
+                            Serial.print(audio_guestbook_data.disk_remaining);
+                            Serial.println(' ');
+                            Serial.println("===========================");
+                        }
 
                         send_events_to_web_client();
                     }
@@ -253,7 +258,10 @@ static void send_events_to_web_client(void) {
     sprintf(runtime_buffer, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
             ((last_time / 1000) % 3600) % 60);
 
-    Serial.print("Run time: ");
-    Serial.println(runtime_buffer);
+    if (DEBUG) {
+        Serial.print("Run time: ");
+        Serial.println(runtime_buffer);
+    }
+
     events.send(String(runtime_buffer), "runtime", millis());
 }
