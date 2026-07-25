@@ -77,12 +77,13 @@
 #define ESP32SERIAL Serial8 
 
 static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
-static const uint32_t max_recording_time = 600'000; // Recording time limit (milliseconds)
+static const uint32_t max_recording_time = 180'000; // Recording time limit (milliseconds) 
 // Recording time limit (milliseconds) warning, will start to sound a beep in users ear.
 static const uint32_t max_recording_time_warning = 10'000;
 
 // 60000 = 1 min
 // 120000 =  2 mins
+// 180000 = 3 mins
 // 240000 = 4 mins
 // 600000 = 10 mins
 
