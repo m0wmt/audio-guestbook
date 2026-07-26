@@ -59,6 +59,7 @@
 #include <Wire.h>
 
 /* Defines */
+#define DEBUG false       // To print to serial output or not, true == print
 
 // Use Teensy 4.1 SD card instead of the audio boards SD card interface.
 #define SDCARD_CS_PIN BUILTIN_SDCARD
@@ -164,7 +165,9 @@ static void start_recording(void);
 static void continue_recording(void);
 static void stop_recording(void);
 static void write_out_wav_header(void);
+#if DEBUG
 static void print_mode(void); // for debugging only
+#endif
 static void dialing_tone(dial_tone_state_t on_or_off);
 
 /**
@@ -184,16 +187,19 @@ void setup() {
 
     delay(2000); 
 
+    #if DEBUG
+        print_mode();
+    #endif
+
+#if DEBUG
     Serial.println("Serial set up correctly");
-
     Serial.printf("Audio block set to %d samples\n", AUDIO_BLOCK_SAMPLES);
-
-    print_mode();
-
     Serial.println("Setting up audio and SD card");
+#endif
 
     setSyncProvider(get_teensy_three_time); // the function to get the time from the RTC
     if (timeStatus() != timeSet) {
+#if DEBUG
         Serial.println("Unable to sync with the RTC");
     } else {
         Serial.println("RTC has set the system time");
@@ -202,15 +208,17 @@ void setup() {
         Serial.print(minute());
         Serial.print(":");
         Serial.println(second());
+#endif
     }
 
-
     // Check connection to ESP32 has been initialised
+#if DEBUG
     if (ESP32SERIAL) {
         Serial.println("ESP32SERIAL initialised");
     } else {
         Serial.println("ESP32SERIAL not initialised");
     }
+#endif
 
     // Configure the input pins
     pinMode(HANDSET_PIN, INPUT_PULLUP);
@@ -252,39 +260,37 @@ void setup() {
             sd_card_error();
             if (SD.begin(SDCARD_CS_PIN)) {
                 b_sd_card = true;
+#if DEBUG
                 Serial.println("SD card present");
+#endif
             }
         }
     } else {
         b_sd_card = true;
+#if DEBUG
         Serial.println("SD card present");
+#endif
     }
 
     delay(3000); // So we get to hear that the system is working!
 
-    // filenames are always uppercase 8.3 format
-    // Serial.println("Starting to play example .wav files");
-    // play_file("SDTEST1.WAV");
-    // delay(500);
-    // play_file("SDTEST2.WAV");
-    // delay(500);
-    // play_file("SDTEST3.WAV");
-    // delay(500);
-    // play_file("SDTEST4.WAV");
-    // delay(1500);
-    // Serial.println("Example .wav files finished playing");
-
+#if DEBUG
     // Get the maximum number of blocks that have ever been used
     Serial.print("Max number of blocks used by Audio were: ");
     Serial.println(AudioMemoryUsageMax());
-
+#endif
     mode = READY;
-    print_mode();
 
+    #if DEBUG
+        print_mode();
+    #endif
+    
     if (b_sd_card) {
         total_disk_size = SD.totalSize();
-        Serial.print("SD card size: "); Serial.println(total_disk_size);
-        Serial.print("SD space used: "); Serial.println(SD.usedSize());
+        #if DEBUG
+            Serial.print("SD card size: "); Serial.println(total_disk_size);
+            Serial.print("SD space used: "); Serial.println(SD.usedSize());
+        #endif
         audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
     }
 
@@ -312,19 +318,25 @@ void loop() {
         if (phone_handset.risingEdge()) { // Handset has been replaced
             dialing_tone(OFF);
             mode = READY;
-            print_mode();
 
-            // Get the maximum number of blocks that have ever been used
-            Serial.print("Ready: Max number of blocks used by Audio were: ");
-            Serial.println(AudioMemoryUsageMax());
+            #if DEBUG
+                print_mode();
+
+                // Get the maximum number of blocks that have ever been used
+                Serial.print("Ready: Max number of blocks used by Audio were: ");
+                Serial.println(AudioMemoryUsageMax());
+            #endif
+
             AudioMemoryUsageMaxReset();
         } else {
             // error();
             delay(3000);
 
-            // Get the maximum number of blocks that have ever been used
-            Serial.print("Error: Max number of blocks used by Audio were: ");
-            Serial.println(AudioMemoryUsageMax());
+            #if DEBUG
+                // Get the maximum number of blocks that have ever been used
+                Serial.print("Error: Max number of blocks used by Audio were: ");
+                Serial.println(AudioMemoryUsageMax());
+            #endif
         }
         break;
 
@@ -336,38 +348,57 @@ void loop() {
         // Everything okay and ready to be used
         // Falling edge occurs when the handset is lifted --> GPO 706 telephone
         if (phone_handset.fallingEdge()) {
-            Serial.println("Handset lifted");
+            #if DEBUG
+                Serial.println("Handset lifted...");
+            #endif
+
             mode = RECORDMESSAGEPROMPT;
-            print_mode();
+
+            #if DEBUG
+                print_mode();
+            #endif
         }
 
         break;
 
     case RECORDMESSAGEPROMPT:
         // Play message to record after the beep
-        delay(1000); // Wait a second for handset to be brought up to ear
+        delay(250); // Wait a second for handset to be brought up to ear
         wave_file.play("record.wav");
         while (!wave_file.isStopped()) {
             // Check if handset has been replaced
             phone_handset.update();
             if (phone_handset.risingEdge()) {
                 wave_file.stop();
-                Serial.println("In message prompt, set mode to ready");
+                #if DEBUG
+                    Serial.println("In message prompt, set mode to ready");
+                #endif
+
                 delay(500); // Time for play back to stop
                 mode = READY;
-                print_mode();
+
+                #if DEBUG
+                    print_mode();
+                #endif
             }
         }
 
         // Check handset was not replaced above
         if (mode == RECORDMESSAGEPROMPT) {
-            // Play beep to let user know to start speaking
-            synth_waveform.frequency(650);
-            mixer.gain(3, 1.0f);
+            // Don't play the beep, user has provided own beep in record file supplied by them
 
-            synth_waveform.amplitude(0.9);
-            delay(750);
-            synth_waveform.amplitude(0); // silence beep
+            // Play beep to let user know to start speaking
+            // synth_waveform.frequency(650);
+            // mixer.gain(3, 1.0f);
+
+            // synth_waveform.amplitude(0.9);
+            // delay(750);
+            // synth_waveform.amplitude(0); // silence beep
+
+            #if DEBUG
+                Serial.println("record.wav ended, start recording message");
+            #endif
+
             delay(250);                  // Delay so the message start beep is not recorded - something to look at
 
             start_recording();
@@ -382,24 +413,26 @@ void loop() {
             end_beep();
             number_of_recordings++;
             mode = READY;
-            print_mode();
+
+            #if DEBUG
+                print_mode();
+            #endif
         } else if (recording_timer >= max_recording_time) {
-            Serial.print("MAX recording time exceeded: ");
-            Serial.println(recording_timer);
+            #if DEBUG
+                Serial.print("MAX recording time exceeded: ");
+                Serial.println(recording_timer);
+            #endif
 
             stop_recording();
             end_beep();
             number_of_recordings++;
 
-            // Play very short warning beep to indicate THE END
-            // synth_waveform.frequency(700);
-            // synth_waveform.amplitude(0.4);
-            // delay(1000);
-            // synth_waveform.amplitude(0); // silence beep
-
             mode = ERROR;
-            print_mode();
 
+            #if DEBUG
+                print_mode();
+            #endif
+            
             dialing_tone(ON);
         } else {
             // Check for coming near to end of max recording, sound a beep 'n' seconds before the end
@@ -418,11 +451,17 @@ void loop() {
 
     // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
     if (press_button.fallingEdge()) {
-        Serial.println("PRESS button pressed");
+        #if DEBUG
+            Serial.println("PRESS button pressed");
+        #endif
+
         // delay(1000);
         // start_recording();
     } else if (press_button.risingEdge()) { // PRESS button is released
-        Serial.println("PRESS button released");
+        #if DEBUG
+            Serial.println("PRESS button released");
+        #endif
+
         delay(1000);
         if (mode != READY) {
             // stop_recording();
@@ -458,39 +497,41 @@ void loop() {
 /**
  * @brief For debugging only, print out what mode we are set to.
  */
+#if DEBUG
 static void print_mode(void) {
-    Serial.print("Mode switched to: ");
+        Serial.print("Mode switched to: ");
 
-    switch (mode) {
-    case ERROR:
-        Serial.println(" ERROR");
-        break;
+        switch (mode) {
+            case ERROR:
+                Serial.println(" ERROR");
+                break;
 
-    case INITIALISING:
-        Serial.println(" INITIALISING");
-        break;
+            case INITIALISING:
+                Serial.println(" INITIALISING");
+                break;
 
-    case READY:
-        Serial.println(" READY");
-        break;
+            case READY:
+                Serial.println(" READY");
+                break;
 
-    case RECORDMESSAGEPROMPT:
-        Serial.println(" RECORDMESSAGEPROMPT");
-        break;
+            case RECORDMESSAGEPROMPT:
+                Serial.println(" RECORDMESSAGEPROMPT");
+                break;
 
-    case RECORDING:
-        Serial.println(" RECORDING");
-        break;
+            case RECORDING:
+                Serial.println(" RECORDING");
+                break;
 
-    case PLAYING:
-        Serial.println(" PLAYING");
-        break;
+            case PLAYING:
+                Serial.println(" PLAYING");
+                break;
 
-    default:
-        Serial.println(" UNDEFINED");
-        break;
-    }
+            default:
+                Serial.println(" UNDEFINED");
+                break;
+        }
 }
+#endif
 
 // WHAT DO WE DO WITH CHANGES IN BUTTONS? - TODO
 /**
@@ -706,11 +747,14 @@ static void update_admin_monitor(void) {
         audio_guestbook_data.recordings = number_of_recordings;
         
         ESP32SERIAL.write(sizeof audio_guestbook_data);     // number of bytes in the structure
-        Serial.print("Sending data do Admin Monitor Application: "); // debug
-        Serial.println(sizeof audio_guestbook_data);
-        Serial.print("Mode: "); Serial.println(audio_guestbook_data.mode);
-        Serial.print("Recordings: "); Serial.println(audio_guestbook_data.recordings);
-        Serial.print("Disk Remaining: "); Serial.println(audio_guestbook_data.disk_remaining);
+        
+        #if DEBUG
+            Serial.println("Sending data do Admin Monitor Application: "); // debug
+            Serial.print("    Mode: "); Serial.println(audio_guestbook_data.mode);
+            Serial.print("    Recordings: "); Serial.println(audio_guestbook_data.recordings);
+            Serial.print("    Disk Remaining: "); Serial.println(audio_guestbook_data.disk_remaining);
+        #endif
+
         ESP32SERIAL.write((byte*)&audio_guestbook_data, sizeof audio_guestbook_data);
     }
 }
@@ -720,46 +764,6 @@ static void update_admin_monitor(void) {
  */
 static time_t get_teensy_three_time(void) { return Teensy3Clock.get(); }
 
-/**
- * @brief Utility function for digital clock display: prints preceding colon and leading 0.
- */
-// static void print_digits(int digits) {
-//     Serial.print(":");
-//     if (digits < 10)
-//         Serial.print('0');
-
-//     Serial.print(digits);
-// }
-
-/**
- * @brief Digital clock display of the time.
- */
-// static void digital_clock_display(void) {
-//     Serial.print(hour());
-//     print_digits(minute());
-//     print_digits(second());
-//     Serial.print(" ");
-//     Serial.print(day());
-//     Serial.print(" ");
-//     Serial.print(month());
-//     Serial.print(" ");
-//     Serial.print(year());
-//     Serial.println();
-// }
-
-/**
- * @brief Dispaly the time.
- */
-// static void print_time(void) {
-//     static unsigned long previousTimeInMillis;
-//     unsigned long timeNow = millis();
-
-//     if (timeNow - previousTimeInMillis >= 1000) {
-//         previousTimeInMillis = timeNow;
-
-//         digital_clock_display();
-//     }
-// }
 
 // NEED TO HANDLE ERROR - SET MODE - TODO
 /**
@@ -776,22 +780,32 @@ static void start_recording(void) {
         }
     }
 
-    Serial.print("start recording to file: '");
-    Serial.print(filename);
-    Serial.println("'");
+    #if DEBUG
+        Serial.print("start recording to file: '");
+        Serial.print(filename);
+        Serial.println("'");
+    #endif
 
     file_object = SD.open(filename, FILE_WRITE);
-    Serial.println("Creating file.");
     if (file_object) {
-        Serial.print("RECORDING to ");
-        Serial.println(filename);
+        #if DEBUG
+            Serial.print("RECORDING to ");
+            Serial.println(filename);
+        #endif
+
         queue1.begin();
         recording_timer = 0; // Reset timer to capture long recordings
         mode = RECORDING;
-        print_mode();
+
+        #if DEBUG
+            print_mode();
+        #endif
+
         record_bytes_saved = 0L;
     } else {
-        Serial.println("Couldn't open file to record!");
+        #if DEBUG
+            Serial.println("Couldn't open file to record!");
+        #endif
     }
 }
 
@@ -824,7 +838,10 @@ static void continue_recording(void) {
  * @brief Stop recording voice, write out any remaining data to the SD card.
  */
 static void stop_recording(void) {
-    Serial.println("stopRecording");
+    #if DEBUG
+        Serial.println("stopRecording");
+    #endif
+
     // Stop adding any new data to the queue
     queue1.end();
     // Flush all existing remaining data from the queue
@@ -833,20 +850,28 @@ static void stop_recording(void) {
         file_object.write((byte *)queue1.readBuffer(), AUDIO_BLOCK_SAMPLES * sizeof(int16_t));
         queue1.freeBuffer();
         record_bytes_saved += AUDIO_BLOCK_SAMPLES * sizeof(int16_t);
-        Serial.println("Flushed audio to file");
+        
+        #if DEBUG
+            Serial.println("Flushed audio to file");
+        #endif
     }
 
     write_out_wav_header();
 
     file_object.close(); // Close the file
 
-    Serial.println("Closed file");
+    #if DEBUG
+        Serial.println("Closed file");
+    #endif
 
     // Get disk space left on SD card
     audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
 
     mode = READY;
-    print_mode();
+
+    #if DEBUG
+        print_mode();
+    #endif
 }
 
 /**
@@ -933,9 +958,12 @@ static void write_out_wav_header(void) {
     file_object.write(byte3);
     file_object.write(byte4);
     file_object.close();
-    Serial.println("header written");
-    Serial.print("Subchunk2: ");
-    Serial.println(Subchunk2Size);
+    
+    #if DEBUG
+        Serial.println("header written");
+        Serial.print("Subchunk2: ");
+        Serial.println(Subchunk2Size);
+    #endif
 }
 
 /**
