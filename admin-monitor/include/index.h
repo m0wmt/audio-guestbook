@@ -57,6 +57,7 @@ if (!!window.EventSource) {
  source.addEventListener('status', function(e) {
   console.log("status", e.data);
   document.getElementById("stat").innerHTML = e.data;
+  playError();
  }, false);
  
  source.addEventListener('recordings', function(e) {
@@ -66,7 +67,7 @@ if (!!window.EventSource) {
  
  source.addEventListener('diskspace', function(e) {
   console.log("diskspace", e.data);
-  document.getElementById("disk").innerHTML = e.data;
+  document.getElementById("disk").innerHTML = formatBytes(e.data);
  }, false);
 
  source.addEventListener('runtime', function(e) {
@@ -74,6 +75,21 @@ if (!!window.EventSource) {
   document.getElementById("rt").innerHTML = e.data;
  }, false);
 
+}
+
+const formatBytes = (input, precision = 2) => {
+    const bytes = Number(input);
+
+    if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    if (bytes < 1024) return `${bytes} B`;
+
+    const unitIndex = Math.floor(Math.log10(bytes) / Math.log10(1024));
+    const value = bytes / Math.pow(1024, unitIndex);
+
+    return `${value.toFixed(precision).replace(/\.?0+$/, '')} ${units[unitIndex]}`;
 }
 </script>
 </body>
