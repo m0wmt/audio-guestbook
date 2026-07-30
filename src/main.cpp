@@ -69,8 +69,8 @@
 #define HANDSET_PIN 41      // Handset switch
 #define PRESS_PIN 40        // PRESS switch
 #define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
-#define LED_BLINK_DELAY 500 // Blink LED every 'n' milliseconds
-#define UPDATE_DELAY 5000   // Send message to admin monitor application (ESP32) via UART every 'n' milliseconds
+#define LED_BLINK_DELAY 1000 // Blink LED every 'n' milliseconds
+#define UPDATE_DELAY 60000   // Send message to admin monitor application (ESP32) via UART every 'n' milliseconds
 
 // set this to the hardware serial port we are going to use to connect to ESP32. Needs to be a
 // higher serial port due to the audio shield taking up all the lower pins. 
