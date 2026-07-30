@@ -81,13 +81,14 @@ char runtime_buffer[10];
 
 void setup() {
 
-    neopixelWrite(48, 0, 0, 0); // Off
-
-    Serial.begin(115200);
-
-    delay(5000);
+    neopixelWrite(RGB_BUILTIN, 0, 0, 0); // Turn off LED
 
     if (DEBUG) {
+       Serial.begin(115200);
+
+        delay(5000);  // Wait for serial to start
+
+    
         Serial.println(F("\n##################################"));
         Serial.println(F("ESP32 Information:"));
         Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(),
@@ -144,16 +145,18 @@ void setup() {
 
     // Taken from config.h
     bool result = WiFi.softAP(SSID, WIFI_PASSWORD);
-    Serial.print("Set up access point result = ");
-    Serial.println(result);
+    if (DEBUG) {
+        Serial.print("Set up access point result = ");
+        Serial.println(result);
 
-    Serial.print("Connecting to: ");
-    Serial.println(SSID);
+        Serial.print("Connecting to: ");
+        Serial.println(SSID);
 
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
-
+        IPAddress IP = WiFi.softAPIP();
+        Serial.print("AP IP address: ");
+        Serial.println(IP);
+    }
+    
     // Handle Web Server
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(200, "text/html", MAIN_page, processor); });
@@ -262,8 +265,10 @@ void loop() {
  * @brief Handle requests from the web page.
  */
 static String processor(const String &var) {
-    Serial.println(var);
-    
+    if (DEBUG) {
+        Serial.println(var);
+    }
+
     if (var == "DISKSPACE") {
         return String(audio_guestbook_data.disk_remaining);
     } else if (var == "STATUS") {
