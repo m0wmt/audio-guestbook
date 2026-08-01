@@ -28,7 +28,7 @@
 #endif
 #define RGB_BUILTIN 48
 
-#define DEBUG true      // to turn on/off printf statements
+#define DEBUG false      // to turn on/off printf statements
 
 static String processor(const String &var);
 static void send_events_to_web_client(void);
@@ -54,7 +54,8 @@ typedef enum { // State of the audio guestbook
     READY,
     RECORDMESSAGEPROMPT,
     RECORDING,
-    PLAYING
+    PLAYING,
+    LEFT_OFF_HOOK
 } button_mode_t;
 // end of teensy information setup
 
@@ -238,6 +239,10 @@ void loop() {
                                     Serial.print("PLAYING");
                                     break;
 
+                                case LEFT_OFF_HOOK:
+                                    Serial.print("LEFT_OFF_HOOK");
+                                    break;
+
                                 default:
                                     Serial.print("UNDEFINED");
                                     break;
@@ -280,6 +285,8 @@ static String processor(const String &var) {
             return "PLAYING";
         } else if (audio_guestbook_data.mode == INITIALISING) {
             return "INITIALISING";
+        } else if (audio_guestbook_data.mode == LEFT_OFF_HOOK) {
+            return "LEFT_OFF_HOOK";
         } else {
             return "ERROR";
         }
@@ -307,6 +314,8 @@ static void send_events_to_web_client(void) {
         events.send("PLAYING", "status", millis());
     } else if (audio_guestbook_data.mode == INITIALISING) {
         events.send("INITIALISING", "status", millis());
+    } else if (audio_guestbook_data.mode == LEFT_OFF_HOOK) {
+        events.send("LEFT OFF HOOK", "status", millis());
     } else {
         events.send("ERROR", "status", millis());
     }

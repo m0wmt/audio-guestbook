@@ -123,7 +123,8 @@ typedef enum { // Keep track of current state of the device
     READY,
     RECORDMESSAGEPROMPT,
     RECORDING,
-    PLAYING
+    PLAYING,
+    LEFT_OFF_HOOK
 } button_mode_t;
 button_mode_t mode = INITIALISING;
 
@@ -155,7 +156,7 @@ static void end_beep(void);
 // static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
-static void update_admin_monitor(void);
+static void update_admin_monitor(bool mode_changed);
 static time_t get_teensy_three_time(void);
 // static void print_digits(int digits);
 // static void digital_clock_display(void);
@@ -294,7 +295,7 @@ void setup() {
         audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
     }
 
-    update_admin_monitor();
+    update_admin_monitor(true);
 
     dialing_tone(OFF);
 
@@ -313,7 +314,7 @@ void loop() {
     press_button.update();
 
     switch (mode) {
-    case ERROR:
+    case LEFT_OFF_HOOK:
         // Error - Phone was left off hook for too long to get here
         if (phone_handset.risingEdge()) { // Handset has been replaced
             dialing_tone(OFF);
@@ -328,6 +329,9 @@ void loop() {
             #endif
 
             AudioMemoryUsageMaxReset();
+
+            // Important mode change, update admin monitor
+            update_admin_monitor(true);
         } else {
             // error();
             delay(3000);
@@ -342,6 +346,15 @@ void loop() {
 
     case INITIALISING:
         // Program initialising - handset not it place etc. ?????
+        break;
+
+    case ERROR:
+        // Should not get here now, using LEFT_OFF_HOOK instead
+        #if DEBUG
+            Serial.println("ERROR, shouldn't be here!");
+            print_mode();
+        #endif
+
         break;
 
     case READY:
@@ -402,17 +415,22 @@ void loop() {
             delay(250);                  // Delay so the message start beep is not recorded - something to look at
 
             start_recording();
+
+            // Important mode change, update admin monitor
+            update_admin_monitor(true);
         }
         break;
 
     case RECORDING:
         // Has the handset been replaced or have we exceeded the recording limit
-        // ######## NEED A WARNING TONE THAT MESSAGE IS COMING TO THE MAX LENGTH ALLOWED ##############
         if (phone_handset.risingEdge()) {
             stop_recording();
             end_beep();
             number_of_recordings++;
             mode = READY;
+
+            // Important mode change, update admin monitor
+            update_admin_monitor(true);
 
             #if DEBUG
                 print_mode();
@@ -427,13 +445,16 @@ void loop() {
             end_beep();
             number_of_recordings++;
 
-            mode = ERROR;
+            mode = LEFT_OFF_HOOK;
 
             #if DEBUG
                 print_mode();
             #endif
             
             dialing_tone(ON);
+
+            // Important mode change, update admin monitor
+            update_admin_monitor(true);
         } else {
             // Check for coming near to end of max recording, sound a beep 'n' seconds before the end
             if (recording_timer > (max_recording_time - max_recording_time_warning)) {
@@ -449,30 +470,29 @@ void loop() {
         break;
     }
 
-    // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
-    if (press_button.fallingEdge()) {
-        #if DEBUG
-            Serial.println("PRESS button pressed");
-        #endif
+    // // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
+    // if (press_button.fallingEdge()) {
+    //     #if DEBUG
+    //         Serial.println("PRESS button pressed");
+    //     #endif
 
-        // delay(1000);
-        // start_recording();
-    } else if (press_button.risingEdge()) { // PRESS button is released
-        #if DEBUG
-            Serial.println("PRESS button released");
-        #endif
+    //     // delay(1000);
+    //     // start_recording();
+    // } else if (press_button.risingEdge()) { // PRESS button is released
+    //     #if DEBUG
+    //         Serial.println("PRESS button released");
+    //     #endif
 
-        delay(1000);
-        if (mode != READY) {
-            // stop_recording();
-            // Serial.print("Max number of blocks used by Audio were: ");
-            // Serial.println(AudioMemoryUsageMax());
-        }
-    }
+    //     delay(1000);
+    //     if (mode != READY) {
+    //         // stop_recording();
+    //         // Serial.print("Max number of blocks used by Audio were: ");
+    //         // Serial.println(AudioMemoryUsageMax());
+    //     }
+    // }
 
     blink_led();
-    update_admin_monitor();
-    //    print_time();
+    update_admin_monitor(false);
 }
 
 /**
@@ -502,6 +522,10 @@ static void print_mode(void) {
         Serial.print("Mode switched to: ");
 
         switch (mode) {
+            case LEFT_OFF_HOOK:
+                Serial.println(" LEFT_OFF_HOOK");
+                break;
+
             case ERROR:
                 Serial.println(" ERROR");
                 break;
@@ -731,12 +755,15 @@ static void blink_led(void) {
 
 /**
  * @brief Update the admin monitor (esp32 in this case)
+ * 
+ * @param mode_changed Force a message to the admin monitor if there has been
+ * an important mode change.
  */
-static void update_admin_monitor(void) {
+static void update_admin_monitor(bool mode_changed) {
     static unsigned long previousMillis;
     unsigned long timeNow = millis();
 
-    if (timeNow - previousMillis >= UPDATE_DELAY) {
+    if ((timeNow - previousMillis >= UPDATE_DELAY) || (mode_changed == true)) {
         previousMillis = timeNow;
 
         for (size_t i = 0; i < sizeof sync_header; i++) {
@@ -866,8 +893,6 @@ static void stop_recording(void) {
 
     // Get disk space left on SD card
     audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
-
-    mode = READY;
 
     #if DEBUG
         print_mode();
