@@ -162,6 +162,8 @@ Of the 4 x 12v batteries I have 3 of them seem to be okay (12.5v +) and one isn'
 Had a look at bluetooth monitor but having issues with phone when I turn bluetooth on/off, doesn't reconnect to bluetooth on the ESP32 - probably something I'm not doing right!  Checked that WiFi option was still working, had a slight issue with the status message, spelt the flag in the index.h file wrong so it wasn't updating, fixed now :-)  Had a look at slowing the speed of the ESP32, it's only showing a web page to me so not doing much and slowing it down will save some power.  Changed the speed in the platform.ini file, could do it in code (which I did first) but here seems like the best place for it.
 
 July 2026; Now have a voice recording from the future Mr & Mrs to play when the phone is picked up.  Also reduced the recording time of a message to 3 minutes.
+
+August 2026; Currently carrying out testing.  Have added an error message for leaving the handset off the hook to show when this happens in the admin monitor.  Admin monitor is currently running it's own web server to host the web page, will have a look if we could use a phopne hotspot instead so that we don't have to keep changing the wifi on the phone.  Own web page is better in that you don't need internet access if you're in the middle of nowhere.  
  
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
