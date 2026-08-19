@@ -27,7 +27,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         <p style="color:rgb(10, 66, 64);">RECORDINGS</p><p><span class="reading"><span id="rec">%RECORDINGS%</span></span></p>
       </div>
       <div class="card">
-        <p style="color:rgb(10, 66, 64);">DISK SPACE REMAINING</p><p><span class="reading"><span id="disk">%DISKSPACE%</span> Bytes</span></p>
+        <p style="color:rgb(10, 66, 64);">DISK SPACE REMAINING</p><p><span class="reading"><span id="disk">%DISKSPACE%</span></span></p>
       </div>
       <div class="card">
         <p style="color:rgb(10, 66, 64);">RUN TIME</p>
@@ -57,7 +57,6 @@ if (!!window.EventSource) {
  source.addEventListener('status', function(e) {
   console.log("status", e.data);
   document.getElementById("stat").innerHTML = e.data;
-  playError();
  }, false);
  
  source.addEventListener('recordings', function(e) {
@@ -91,6 +90,11 @@ const formatBytes = (input, precision = 2) => {
 
     return `${value.toFixed(precision).replace(/\.?0+$/, '')} ${units[unitIndex]}`;
 }
+
+window.onload = function() {
+  document.getElementById("disk").innerHTML = formatBytes(%DISKSPACE%);
+};
+
 </script>
 </body>
 </html>
