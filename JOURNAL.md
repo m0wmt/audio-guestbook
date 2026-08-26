@@ -165,6 +165,11 @@ July 2026; Now have a voice recording from the future Mr & Mrs to play when the 
 
 August 2026; Currently carrying out testing.  Have added an error message for leaving the handset off the hook to show when this happens in the admin monitor.  Admin monitor is currently running it's own web server to host the web page, will have a look if we could use a phopne hotspot instead so that we don't have to keep changing the wifi on the phone.  Own web page is better in that you don't need internet access if you're in the middle of nowhere.  
  
+Update: Testing has gone well and no problems, even with loud music/voices when recording messages.  Have added a different monitor application (audio-guestbook-admin-monitor)
+using a Waveshare 1.43" round display to show phone data.  Much easier to use than a phone all the time.
+
+<img src="./images/display.jpeg" alt="Round Display" height=200>
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
