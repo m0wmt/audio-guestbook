@@ -19,7 +19,7 @@
 #endif
 #define RGB_BUILTIN 48
 
-#define DEBUG true      // to turn on/off printf statements
+#define DEBUG false      // to turn on/off printf statements
 
 static void send_events_via_esp_now(void);
 
@@ -49,20 +49,16 @@ typedef enum { // State of the audio guestbook
 } button_mode_t;
 // end of teensy information setup
 
-// // Variables
-// unsigned long last_time = 0;
-// char runtime_buffer[10];
-
 // ESP NOW
 // ESP-NOW message, max size 250 bytes
-typedef struct struct_message {
-    uint8_t mode;
-    uint16_t recordings;
+typedef struct {
     uint64_t disk_space;
     unsigned long last_time;
-} struct_message;
+    uint16_t recordings;
+    uint8_t status;
+} struct_message_t;
 
-struct_message myData;
+struct_message_t esp_now_message;
 
 
 void setup() {
@@ -135,10 +131,10 @@ void setup() {
     }
 
     // Reset data
-    myData.mode = INITIALISING;
-    myData.recordings = 0;
-    myData.disk_space = 0;
-    myData.last_time = 0;
+    esp_now_message.status = INITIALISING;
+    esp_now_message.recordings = 0;
+    esp_now_message.disk_space = 0;
+    esp_now_message.last_time = 0;
 
     // Set up UART communications (UART0) to Teensy. Rx only will be used,
     // there will be no transmit to the Teensy
@@ -236,16 +232,16 @@ static void send_events_via_esp_now(void) {
     // sprintf(myData.runtime, "%02d:%02d:%02d", (last_time / 1000) / 3600, ((last_time / 1000) % 3600) / 60,
     //         ((last_time / 1000) % 3600) % 60);
 
-    myData.last_time = millis();
-    myData.recordings = audio_guestbook_data.recordings;
-    myData.mode = audio_guestbook_data.mode;
-    myData.disk_space = audio_guestbook_data.disk_remaining;
+    esp_now_message.last_time = millis();
+    esp_now_message.recordings = audio_guestbook_data.recordings;
+    esp_now_message.status = audio_guestbook_data.mode;
+    esp_now_message.disk_space = audio_guestbook_data.disk_remaining;
 
-    esp_err_t result = esp_now_send(receiverMac, (uint8_t *)&myData, sizeof(myData));
+    esp_err_t result = esp_now_send(receiverMac, (uint8_t *)&esp_now_message, sizeof(esp_now_message));
     
     if (DEBUG) {
         if (result == ESP_OK) {
-            Serial.printf("Send: \n  recordings=%u, disk space=%llu, mode %d, runtime %lu\n", myData.recordings, myData.disk_space, myData.mode, myData.last_time);
+            Serial.printf("Send: \n  recordings=%u, disk space=%llu, status %d, runtime %lu\n", esp_now_message.recordings, esp_now_message.disk_space, esp_now_message.status, esp_now_message.last_time);
         } else {
             Serial.println("Send failed");
         }    
