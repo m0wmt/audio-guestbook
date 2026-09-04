@@ -125,7 +125,9 @@ Been a while but starting to work now on the admin monitor. Using serial8 on the
 Eventually had some time to work on the admin monitor.  Now that we have batteries available (2 x 24v from an electric buggy) I am going to concentrate on the wi-fi option for
 the admin application as I like the view I can show on my phone.  Will need to test at some point how far wi-fi will reach from an ESP32. 
 
-Wi-fi version now working. Sending data from the Teensy via Serial8 to the ESP32 and then displaying the information on the web page that the ESP32 is publishing.  Could do more on it but it's working so happy for now. <img src="./images/admin-page.jpg" alt="Admin Page" height="400">
+Wi-fi version now working. Sending data from the Teensy via Serial8 to the ESP32 and then displaying the information on the web page that the ESP32 is publishing.  Could do more on it but it's working so happy for now. 
+
+<img src="./images/admin-page.jpg" alt="Admin Page" height="400">
 
 Haven't been able to upload to the Teensy reliably since a Linux (Mint) update so started up the Windows laptop and worked on there for the Teensy part.  Not sure if it was the update that stopped it working (USB issues) but spent too much time trying to get it to work so went the easy route for now. 
 
@@ -163,10 +165,10 @@ Had a look at bluetooth monitor but having issues with phone when I turn bluetoo
 
 July 2026; Now have a voice recording from the future Mr & Mrs to play when the phone is picked up.  Also reduced the recording time of a message to 3 minutes.
 
-August 2026; Currently carrying out testing.  Have added an error message for leaving the handset off the hook to show when this happens in the admin monitor.  Admin monitor is currently running it's own web server to host the web page, will have a look if we could use a phopne hotspot instead so that we don't have to keep changing the wifi on the phone.  Own web page is better in that you don't need internet access if you're in the middle of nowhere.  
+August 2026; Currently carrying out testing.  Have added an error message for leaving the handset off the hook to show when this happens in the admin monitor.  Admin monitor is currently running it's own web server to host the web page, will have a look if we could use a phone hotspot instead so that we don't have to keep changing the wifi on the phone.  Own web page is better in that you don't need internet access if you're in the middle of nowhere.  
  
-Update: Testing has gone well and no problems, even with loud music/voices when recording messages.  Have added a different monitor application (audio-guestbook-admin-monitor)
-using a Waveshare 1.43" round display to show phone data.  Much easier to use than a phone all the time.
+Update: Testing has gone well and no problems, even with loud music/voices when recording messages.  Have added a different monitor application using Espressif’s ESP-NOW protocol for communication; esp-now-admin-server on the ESP32 inside the phone and audio-guestbook-admin-viewer on a 
+Waveshare ESP32-S3 1.43" AMOLED round display to show phone data.  Much easier to use than a phone all the time.
 
 <img src="./images/display.jpeg" alt="Round Display" height=200>
 
