@@ -163,6 +163,7 @@ static time_t get_teensy_three_time(void);
 // static void print_time(void);
 static void sound_warning(void);
 static void start_recording(void);
+static void get_number_of_recordings(void);
 static void continue_recording(void);
 static void stop_recording(void);
 static void write_out_wav_header(void);
@@ -271,6 +272,10 @@ void setup() {
 #if DEBUG
         Serial.println("SD card present");
 #endif
+    }
+
+    if (b_sd_card == true) {
+        get_number_of_recordings();
     }
 
     delay(3000); // So we get to hear that the system is working!
@@ -791,6 +796,25 @@ static void update_admin_monitor(bool mode_changed) {
  */
 static time_t get_teensy_three_time(void) { return Teensy3Clock.get(); }
 
+/**
+ * @brief Find how many recordings we have already, this is so the admin
+ * monitor shows the right value if the phone has been turned on/off for any
+ * reason, like being used at a different venue before the wedding itself.
+ */
+static void get_number_of_recordings(void) {
+    char temp_filename[15];
+
+    // Find the first available file number
+    for (uint16_t i = 0; i < 9999; i++) {
+        // Format the counter as a five-digit number with leading zeroes, followed by file extension
+        snprintf(temp_filename, 11, " %05d.wav", i);
+        // Does the file exist, if so we know the number of recordings we have
+        if (!SD.exists(temp_filename)) {
+            number_of_recordings = i;
+            break;
+        }
+    }
+}
 
 // NEED TO HANDLE ERROR - SET MODE - TODO
 /**
