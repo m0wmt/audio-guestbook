@@ -275,7 +275,7 @@ void setup() {
     }
 
     if (b_sd_card == true) {
-        get_number_of_recordings();
+        get_number_of_recordings(); 
     }
 
     delay(3000); // So we get to hear that the system is working!
