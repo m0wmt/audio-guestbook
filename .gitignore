@@ -4,3 +4,13 @@
 .vscode/launch.json
 .vscode/ipch
 include/config.h
+audio/voicemail-recording.m4a
+audio/record.wav
+.gitignore
+.vscode/extensions.json
+audio/answerphone-message.aup3
+audio/record-old.wav
+.gitignore
+audio/voicemail-recording.wav
+esp-now-admin-server/.vscode/extensions.json
+audio/record-safe.wav
