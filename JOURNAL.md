@@ -172,6 +172,22 @@ Waveshare ESP32-S3 1.43" AMOLED round display to show phone data.  Much easier t
 
 <img src="./images/display.jpeg" alt="Round Display" height=200>
 
+September 2026; Have created a new admin monitor display inspired from a car's speedometer. Has an arc showing the number of recordings and a fuel gauge showing how much disk space is available. Some pictures below, not the best colour reproduction but there to give an idea. 
+
+Recording
+
+<img src="./images/speedometer-green.jpeg" alt="Recording" height=200>
+
+Phone off the hook
+
+<img src="./images/speedometer-orange.jpeg" alt="Off the hook" height=200>
+
+Error
+
+<img src="./images/speedometer-red.jpeg" alt="Recording" height=200>
+
+Have also updated the ESP32 admin program to get the number of recordings when it is switched on so that the viewer shows the correct number of recordings if the phone has been used elsewhere, e.g. during wedding prep!
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
