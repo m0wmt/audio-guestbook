@@ -186,7 +186,7 @@ Error
 
 <img src="./images/speedometer-red.jpeg" alt="Recording" height=200>
 
-Have also updated the ESP32 admin program to get the number of recordings when it is switched on so that the viewer shows the correct number of recordings if the phone has been used elsewhere, e.g. during wedding prep!
+Have also updated the ESP32 admin program to get the number of recordings when it is switched on so that the viewer shows the correct number of recordings if the phone has been used elsewhere, e.g. during wedding prep!  Added a nicer font for the number of recordings, didn't like the old one!
 
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
