@@ -480,7 +480,7 @@ static void phone_handler(void) {
             Serial.println(random_file);
         #endif
 
-        delay(500); // Wait a second for handset to be brought up to ear
+        delay(1000); // Wait a second for handset to be brought up to ear
 
         // Start playing the file.
         wave_file.play(random_file);
@@ -580,14 +580,15 @@ static void phone_mode_change_check(void) {
 
             if (phone_mode == PLAY_RANDOM_MESSAGES) {
                 phone_mode = RECORD_MESSAGES;
+                #if DEBUG
+                    Serial.println("Phone Mode Now Set To Record");
+                #endif
             } else {
                 phone_mode = PLAY_RANDOM_MESSAGES;
+                #if DEBUG
+                    Serial.println("Phone Mode Now Set To Play Random Messages");
+                #endif
             }
-
-            #if DEBUG
-                Serial.print("Phone Mode: ");
-                Serial.println(phone_mode);
-            #endif
         }
 
         // reset
