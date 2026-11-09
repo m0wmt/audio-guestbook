@@ -1,11 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "."
-		},
-		{
 			"name": "button-test",
 			"path": "button-test"
+		},
+		{
+			"name": "audio-guestbook",
+			"path": "."
 		},
 		{
 			"name": "admin-monitor",
