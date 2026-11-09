@@ -188,6 +188,15 @@ Error
 
 Have also updated the ESP32 admin program to get the number of recordings when it is switched on so that the viewer shows the correct number of recordings if the phone has been used elsewhere, e.g. during wedding prep!  Added a nicer font for the number of recordings, didn't like the old one!
 
+November 2026; After a successful wedding (phone worked as advertised :-)) the question came up with what to do with the phone.  We don't need it so offered it to the bride and groom (who already have the 
+phone table) who said yes please.  Then came the thought from them, could they have a random message left at the wedding played if they picked the phone up, which I obviously said yes it's possible.
+
+I created a version 1.0.0 before making any changes - this is a working program with an admin monitor which will not be in the next version.
+
+I have removed all references to the admin monitor as I'm keeping the ESP32 and the round display that I used to display how many recordings there were.  I've created 2 modes the phone can be in, PLAY mode or RECORD mode (so that it can still record messages if required, user requirement) with the default now being PLAY mode as asked by the user.
+
+Using the Teensy's Entropy library (true random number generator, good enough for this) to create a random file number (of the resisting recordings) we can now play random messages that are on the SD card.  To change modes the user needs to press the 'PRESS' button on the top of the phone for 5+ seconds to switch between PLAY and RECORD.
+
 ### Development Tasks:
 * Play .WAV file through handset speaker - Done.
 * Identify handset and PRESS button connections on the phone and detect states on Teensy - Done.
