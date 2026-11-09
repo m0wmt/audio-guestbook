@@ -8,6 +8,9 @@
  * Requirements are available in the README.md file, a journal of my journey is available in the appropriately named
  * JOURNAL.md file.
  *
+ * This version (v2) has the option to record and play a random recording depending what 'mode' the phone is in,
+ * record or play.
+ * 
  * Modified AUDIO_BLOCK_SAMPLES to 256 in
  * /home/#########/.platformio/packages/framework-arduinoteensy/cores/teensy4/AudioStream.h as suggested by the audio
  * guestbook thread on the PRJC forum.
@@ -57,6 +60,7 @@
 #include <SerialFlash.h>
 #include <TimeLib.h>
 #include <Wire.h>
+#include <Entropy.h>
 
 /* Defines */
 #define DEBUG true       // To print to serial output or not, true == print
@@ -70,12 +74,8 @@
 #define PRESS_PIN 40        // PRESS switch
 #define WARNING_DELAY 1000  // Play a warning sound every 'n' milliseconds
 #define LED_BLINK_DELAY 1000 // Blink LED every 'n' milliseconds
-#define UPDATE_DELAY 60000   // Send message to admin monitor application (ESP32) via UART every 'n' milliseconds
 
-// set this to the hardware serial port we are going to use to connect to ESP32. Needs to be a
-// higher serial port due to the audio shield taking up all the lower pins. 
-// Pin 35 - Transmit, Pin 34 Receive, do not forget to connect common gnd between each device. 
-// #define ESP32SERIAL Serial8 
+#define MODE_CHANGE_PRESS_TIME 5000 // 'press' button for at least 5 seconds to change betweeen play and record mode.
 
 static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
 static const uint32_t max_recording_time = 180'000; // Recording time limit (milliseconds) 
@@ -106,17 +106,6 @@ AudioConnection patchCord6(synth_waveform_450, 0, mixer, 3);
 AudioConnection patchCord7(audio_input, 0, queue1, 0); // mic input to queue (L)
 AudioControlSGTL5000 audio_shield;
 
-// Structure for sending data to ESP32 monitor application
-typedef struct __attribute__ ((packed, aligned(1))) {
-    uint8_t mode;
-    uint16_t recordings;
-    uint64_t disk_remaining;
-} status_data_t;
-
-status_data_t audio_guestbook_data;
-uint8_t sync_header[] = {0xDE, 0xAD, 0xBE, 0xEF};   // Syncronization header
-// End of Teensy->ESP32 structure setup
-
 typedef enum { // Keep track of current state of the device
     ERROR,
     INITIALISING,
@@ -127,6 +116,12 @@ typedef enum { // Keep track of current state of the device
     LEFT_OFF_HOOK
 } button_mode_t;
 button_mode_t mode = INITIALISING;
+
+typedef enum { // Keep track of current mode the phone is in
+    PLAY_RANDOM_MESSAGES,
+    RECORD_MESSAGES
+} phone_mode_t;
+phone_mode_t phone_mode = PLAY_RANDOM_MESSAGES;
 
 typedef enum { // Keep track of dial tone state
     OFF,
@@ -145,22 +140,24 @@ elapsedMillis recording_timer = 0;  // Recording timer to prevent long messages
 uint16_t number_of_recordings = 0;  // Number of recordings since last started
 uint64_t total_disk_size = 0;       // SD Card disk size
 
+// Variables used by the press_button to change phone mode (record/play)
+unsigned long press_button_pressed_time  = 0L;
+unsigned long press_button_released_time = 0L;
+
 // Debounce on switches
 Bounce phone_handset = Bounce(HANDSET_PIN, 40);
 Bounce press_button = Bounce(PRESS_PIN, 40);
 
 /* Function prototypes */
 // static void play_file(const char *filename);
+static void phone_handler(void);
+//static void play_random_message(void);
+static void phone_mode_change_check(void);
 static void wait(unsigned int milliseconds);
 static void end_beep(void);
-// static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
-// static void update_admin_monitor(bool mode_changed);
 static time_t get_teensy_three_time(void);
-// static void print_digits(int digits);
-// static void digital_clock_display(void);
-// static void print_time(void);
 static void sound_warning(void);
 static void start_recording(void);
 static void get_number_of_recordings(void);
@@ -180,12 +177,6 @@ void setup() {
 
     pinMode(LED_BUILTIN, OUTPUT);    // Orange LED on board
     digitalWrite(LED_BUILTIN, HIGH); // Glowing whilst running through setup code
-
-    // while (!Serial) {
-    //     // Wait for serial to start!
-    // }
-
-    // ESP32SERIAL.begin(9600);
 
     delay(2000); 
 
@@ -211,15 +202,6 @@ void setup() {
         Serial.println(second());
 #endif
     }
-
-    // Check connection to ESP32 has been initialised
-// #if DEBUG
-//     if (ESP32SERIAL) {
-//         Serial.println("ESP32SERIAL initialised");
-//     } else {
-//         Serial.println("ESP32SERIAL not initialised");
-//     }
-// #endif
 
     // Configure the input pins
     pinMode(HANDSET_PIN, INPUT_PULLUP);
@@ -261,29 +243,29 @@ void setup() {
             sd_card_error();
             if (SD.begin(SDCARD_CS_PIN)) {
                 b_sd_card = true;
-#if DEBUG
-                Serial.println("SD card present");
-#endif
+                #if DEBUG
+                    Serial.println("SD card present");
+                #endif
             }
         }
     } else {
         b_sd_card = true;
-#if DEBUG
-        Serial.println("SD card present");
-#endif
+        #if DEBUG
+            Serial.println("SD card present");
+        #endif
     }
 
     if (b_sd_card == true) {
         get_number_of_recordings(); 
     }
 
-    delay(3000); // So we get to hear that the system is working!
+    delay(2000); // So we get to hear that the system is working!
 
-#if DEBUG
-    // Get the maximum number of blocks that have ever been used
-    Serial.print("Max number of blocks used by Audio were: ");
-    Serial.println(AudioMemoryUsageMax());
-#endif
+    #if DEBUG
+        // Get the maximum number of blocks that have ever been used
+        Serial.print("Max number of blocks used by Audio were: ");
+        Serial.println(AudioMemoryUsageMax());
+    #endif
     mode = READY;
 
     #if DEBUG
@@ -296,10 +278,10 @@ void setup() {
             Serial.print("SD card size: "); Serial.println(total_disk_size);
             Serial.print("SD space used: "); Serial.println(SD.usedSize());
         #endif
-        audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
     }
 
-//    update_admin_monitor(true);
+    // Set up true random number generator
+    Entropy.Initialize();
 
     dialing_tone(OFF);
 
@@ -317,6 +299,18 @@ void loop() {
     phone_handset.update();
     press_button.update();
 
+    phone_mode_change_check();
+
+    phone_handler();
+
+    blink_led();
+}
+
+/**
+ * @brief Record messages to the SD card when the user lifts the phone or play a random recording
+ * depending what mode the phone is currently in (PLAY/RECORD)
+ */
+static void phone_handler(void) {
     switch (mode) {
     case LEFT_OFF_HOOK:
         // Error - Phone was left off hook for too long to get here
@@ -369,7 +363,11 @@ void loop() {
                 Serial.println("Handset lifted...");
             #endif
 
-            mode = RECORDMESSAGEPROMPT;
+            if (phone_mode == PLAY_RANDOM_MESSAGES) {
+                mode = PLAYING;
+            } else {
+                mode = RECORDMESSAGEPROMPT;
+            }
 
             #if DEBUG
                 print_mode();
@@ -470,53 +468,161 @@ void loop() {
         break;
 
     case PLAYING:
-        // Playing a recording
+        // Play a random recording
+        uint32_t file_number = Entropy.random(0, number_of_recordings - 1);
+        char random_file[15];
+
+        // Format the counter as a five-digit number with leading zeroes, followed by file extension
+        snprintf(random_file, 11, " %05ld.wav", file_number);
+        
+        #if DEBUG
+            Serial.print("Play a random recording, filename: ");
+            Serial.println(random_file);
+        #endif
+
+        delay(500); // Wait a second for handset to be brought up to ear
+
+        // Start playing the file.
+        wave_file.play(random_file);
+
+        // A brief delay for the library read WAV info
+        delay(25);
+
+        // Simply wait for the file to finish playing.
+        while (!wave_file.isStopped()) {
+            // Check if handset has been replaced
+            phone_handset.update();
+            if (phone_handset.risingEdge()) {
+                wave_file.stop();
+                #if DEBUG
+                    Serial.println("Playing of message stopped by handset being replaced");
+                #endif
+
+                delay(500); // Time for play back to stop
+            }
+        }
+
+        mode = READY;
+
+        #if DEBUG
+            print_mode();
+        #endif
+
         break;
     }
-
-    // // Falling edge occurs when the PRESS button is pressed --> GPO 706 telephone
-    // if (press_button.fallingEdge()) {
-    //     #if DEBUG
-    //         Serial.println("PRESS button pressed");
-    //     #endif
-
-    //     // delay(1000);
-    //     // start_recording();
-    // } else if (press_button.risingEdge()) { // PRESS button is released
-    //     #if DEBUG
-    //         Serial.println("PRESS button released");
-    //     #endif
-
-    //     delay(1000);
-    //     if (mode != READY) {
-    //         // stop_recording();
-    //         // Serial.print("Max number of blocks used by Audio were: ");
-    //         // Serial.println(AudioMemoryUsageMax());
-    //     }
-    // }
-
-    blink_led();
-    // update_admin_monitor(false);
 }
 
-/**
- * @brief Play audio .wav file.
- */
-// static void play_file(const char *filename) {
-//     Serial.print("PLAYING file: ");
-//     Serial.println(filename);
+// /**
+//  * @brief Play a random message that is on the SD card to the user when they pick up the phone, only
+//  * one recording will play for each lift of the phone.
+//  * */
+// static void play_random_message(void) {
+//     switch (mode) {
+//     case LEFT_OFF_HOOK:
+//         // Error - Phone was left off hook for too long to get here
+//         if (phone_handset.risingEdge()) { // Handset has been replaced
+//             dialing_tone(OFF);
+//             mode = READY;
 
-//     // Start playing the file.  This sketch continues to
-//     // run while the file plays.
-//     wave_file.play(filename);
+//             #if DEBUG
+//                 print_mode();
 
-//     // A brief delay for the library read WAV info
-//     delay(25);
+//                 // Get the maximum number of blocks that have ever been used
+//                 Serial.print("Ready: Max number of blocks used by Audio were: ");
+//                 Serial.println(AudioMemoryUsageMax());
+//             #endif
 
-//     // Simply wait for the file to finish playing.
-//     while (wave_file.isPlaying()) {
+//             AudioMemoryUsageMaxReset();
+
+//             // Important mode change, update admin monitor
+//             // update_admin_monitor(true);
+//         } else {
+//             // error();
+//             delay(3000);
+
+//             #if DEBUG
+//                 // Get the maximum number of blocks that have ever been used
+//                 Serial.print("Error: Max number of blocks used by Audio were: ");
+//                 Serial.println(AudioMemoryUsageMax());
+//             #endif
+//         }
+//         break;
+
+//     case INITIALISING:
+//         // Program initialising - handset not it place etc. ?????
+//         break;
+
+//     case ERROR:
+//         // Should not get here now, using LEFT_OFF_HOOK instead
+//         #if DEBUG
+//             Serial.println("ERROR, shouldn't be here!");
+//             print_mode();
+//         #endif
+
+//         break;
+
+//     case READY:
+//         // Everything okay and ready to be used
+//         // Falling edge occurs when the handset is lifted --> GPO 706 telephone
+//         if (phone_handset.fallingEdge()) {
+//             #if DEBUG
+//                 Serial.println("Handset lifted...");
+//             #endif
+
+//             mode = PLAYING;
+
+//             #if DEBUG
+//                 print_mode();
+//             #endif
+//         }        
+
+//         break;
+
+//     case PLAYING:
+//         //long file_number = get_trng_in_range(0, number_of_recordings - 1);
+//         uint32_t file_number = Entropy.random(0, number_of_recordings - 1);
+//         char random_file[15];
+
+//         // Format the counter as a five-digit number with leading zeroes, followed by file extension
+//         snprintf(random_file, 11, " %05ld.wav", file_number);
+        
+//         #if DEBUG
+//             Serial.print("Play a random recording, filename: ");
+//             Serial.println(random_file);
+//         #endif
+
+//         delay(250); // Wait a second for handset to be brought up to ear
+
+//         // Start playing the file.
+//         wave_file.play(random_file);
+
+//         // A brief delay for the library read WAV info
+//         delay(25);
+
+//         // Simply wait for the file to finish playing.
+//         while (!wave_file.isStopped()) {
+//             // Check if handset has been replaced
+//             phone_handset.update();
+//             if (phone_handset.risingEdge()) {
+//                 wave_file.stop();
+//                 #if DEBUG
+//                     Serial.println("Playing of message stopped by handset being replaced");
+//                 #endif
+
+//                 delay(500); // Time for play back to stop
+//             }
+//         }
+
+//         mode = READY;
+
+//         #if DEBUG
+//             print_mode();
+//         #endif
+
+//         break;
 //     }
 // }
+
 
 /**
  * @brief For debugging only, print out what mode we are set to.
@@ -561,6 +667,55 @@ static void print_mode(void) {
 }
 #endif
 
+/**
+ * @brief Check if the 'press' button has been pressed and if we need to change phone mode.
+ */
+static void phone_mode_change_check(void) {
+    if (press_button.risingEdge()) {    // button released
+        #if DEBUG
+            Serial.println("press_button.risingEdge() == true");
+        #endif
+        press_button_released_time = millis();
+
+        long press_button_duration = press_button_released_time - press_button_pressed_time;
+        #if DEBUG
+            Serial.print("Press button pressed duration: ");
+            Serial.print(press_button_duration);
+            Serial.println(" milliseconds");
+        #endif
+
+        if (press_button_duration > MODE_CHANGE_PRESS_TIME) {
+            #if DEBUG
+                Serial.println("Change Phone Mode");
+            #endif
+
+            if (phone_mode == PLAY_RANDOM_MESSAGES) {
+                phone_mode = RECORD_MESSAGES;
+            } else {
+                phone_mode = PLAY_RANDOM_MESSAGES;
+            }
+
+            #if DEBUG
+                Serial.print("Phone Mode: ");
+                Serial.println(phone_mode);
+            #endif
+        }
+
+        // reset
+        press_button_released_time = 0L;
+        press_button_pressed_time = 0L;
+    }
+
+    if (press_button.fallingEdge()) {   // button pressed
+        #if DEBUG
+            Serial.println("press_button.fallingEdge() == true");
+        #endif
+        press_button_released_time = 0L;        // reset
+        press_button_pressed_time = millis();
+    }
+}
+
+
 // WHAT DO WE DO WITH CHANGES IN BUTTONS? - TODO
 /**
  * @brief Non-blocking delay, which pauses execution of main program logic, while still listening for input
@@ -576,24 +731,6 @@ static void wait(unsigned int milliseconds) {
         while (msec <= milliseconds) {
             // Currently do nothing but wait
         }
-
-        // while (msec <= milliseconds) {
-        //     phone_handset.update();
-        //     press_button.update();
-        //     if (phone_handset.fallingEdge()) {
-        //         Serial.println("WAIT: Handset lifted");
-        //     }
-        //     if (press_button.fallingEdge()) {
-        //         Serial.println("WAIT: PRESS button pressed");
-        //     }
-
-        //     if (phone_handset.risingEdge()) {
-        //         Serial.println("WAIT Handset replaced");
-        //     }
-        //     if (press_button.risingEdge()) {
-        //         Serial.println("WAIT: PRESS button released");
-        //     }
-        // }
     }
 }
 
@@ -637,63 +774,6 @@ static void end_beep(void) {
     synth_waveform.amplitude(0);
 }
 
-/**
- * @brief Play morse code.
- */
-// static void error(void) {
-//     // Morse code timings
-//     uint8_t dot = morse_time_unit; // milliseconds
-//     uint16_t dash = dot * 3;
-//     uint8_t symbol_space = dot;
-//     uint16_t letter_space = dot * 3;
-//     uint16_t word_space = dot * 7;
-
-//     // dots
-//     synth_waveform.amplitude(beep_volume);
-//     synth_waveform.frequency(800);
-//     wait(dot);
-//     synth_waveform.amplitude(0);
-//     wait(symbol_space);
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dot);
-//     synth_waveform.amplitude(0);
-//     wait(symbol_space);
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dot);
-//     synth_waveform.amplitude(0);
-
-//     wait(letter_space);
-
-//     // 3 dashes
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dash);
-//     synth_waveform.amplitude(0);
-//     wait(symbol_space);
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dash);
-//     synth_waveform.amplitude(0);
-//     wait(symbol_space);
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dash);
-//     synth_waveform.amplitude(0);
-
-//     wait(letter_space);
-
-//     // dots
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dot);
-//     synth_waveform.amplitude(0);
-//     wait(symbol_space);
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dot);
-//     synth_waveform.amplitude(0);
-//     wait(symbol_space);
-//     synth_waveform.amplitude(beep_volume);
-//     wait(dot);
-//     synth_waveform.amplitude(0);
-
-//     wait(word_space);
-// }
 
 /**
  * @brief Play morse code SD to indicate SD card error.
@@ -757,38 +837,6 @@ static void blink_led(void) {
     }
 }
 
-/**
- * @brief Update the admin monitor (esp32 in this case)
- * 
- * @param mode_changed Force a message to the admin monitor if there has been
- * an important mode change.
- */
-// static void update_admin_monitor(bool mode_changed) {
-//     static unsigned long previousMillis;
-//     unsigned long timeNow = millis();
-
-//     if ((timeNow - previousMillis >= UPDATE_DELAY) || (mode_changed == true)) {
-//         previousMillis = timeNow;
-
-//         for (size_t i = 0; i < sizeof sync_header; i++) {
-//             ESP32SERIAL.write(sync_header[i]);
-//         }
-
-//         audio_guestbook_data.mode = mode;
-//         audio_guestbook_data.recordings = number_of_recordings;
-        
-//         ESP32SERIAL.write(sizeof audio_guestbook_data);     // number of bytes in the structure
-        
-//         #if DEBUG
-//             Serial.println("Sending data do Admin Monitor Application: "); // debug
-//             Serial.print("    Mode: "); Serial.println(audio_guestbook_data.mode);
-//             Serial.print("    Recordings: "); Serial.println(audio_guestbook_data.recordings);
-//             Serial.print("    Disk Remaining: "); Serial.println(audio_guestbook_data.disk_remaining);
-//         #endif
-
-//         ESP32SERIAL.write((byte*)&audio_guestbook_data, sizeof audio_guestbook_data);
-//     }
-// }
 
 /**
  * @brief Get the time from RTC (if available).
@@ -919,9 +967,6 @@ static void stop_recording(void) {
     #if DEBUG
         Serial.println("Closed file");
     #endif
-
-    // Get disk space left on SD card
-    audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
 
     #if DEBUG
         print_mode();
