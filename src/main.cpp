@@ -59,7 +59,7 @@
 #include <Wire.h>
 
 /* Defines */
-#define DEBUG false       // To print to serial output or not, true == print
+#define DEBUG true       // To print to serial output or not, true == print
 
 // Use Teensy 4.1 SD card instead of the audio boards SD card interface.
 #define SDCARD_CS_PIN BUILTIN_SDCARD
@@ -75,7 +75,7 @@
 // set this to the hardware serial port we are going to use to connect to ESP32. Needs to be a
 // higher serial port due to the audio shield taking up all the lower pins. 
 // Pin 35 - Transmit, Pin 34 Receive, do not forget to connect common gnd between each device. 
-#define ESP32SERIAL Serial8 
+// #define ESP32SERIAL Serial8 
 
 static const uint8_t morse_time_unit = 80;         // Morse code time unit, length of a dot is 1 time unit
 static const uint32_t max_recording_time = 180'000; // Recording time limit (milliseconds) 
@@ -156,7 +156,7 @@ static void end_beep(void);
 // static void error(void);
 static void sd_card_error(void);
 static void blink_led(void);
-static void update_admin_monitor(bool mode_changed);
+// static void update_admin_monitor(bool mode_changed);
 static time_t get_teensy_three_time(void);
 // static void print_digits(int digits);
 // static void digital_clock_display(void);
@@ -185,7 +185,7 @@ void setup() {
     //     // Wait for serial to start!
     // }
 
-    ESP32SERIAL.begin(9600);
+    // ESP32SERIAL.begin(9600);
 
     delay(2000); 
 
@@ -194,7 +194,6 @@ void setup() {
     #endif
 
 #if DEBUG
-    Serial.println("Serial set up correctly");
     Serial.printf("Audio block set to %d samples\n", AUDIO_BLOCK_SAMPLES);
     Serial.println("Setting up audio and SD card");
 #endif
@@ -214,13 +213,13 @@ void setup() {
     }
 
     // Check connection to ESP32 has been initialised
-#if DEBUG
-    if (ESP32SERIAL) {
-        Serial.println("ESP32SERIAL initialised");
-    } else {
-        Serial.println("ESP32SERIAL not initialised");
-    }
-#endif
+// #if DEBUG
+//     if (ESP32SERIAL) {
+//         Serial.println("ESP32SERIAL initialised");
+//     } else {
+//         Serial.println("ESP32SERIAL not initialised");
+//     }
+// #endif
 
     // Configure the input pins
     pinMode(HANDSET_PIN, INPUT_PULLUP);
@@ -300,7 +299,7 @@ void setup() {
         audio_guestbook_data.disk_remaining = total_disk_size - SD.usedSize();
     }
 
-    update_admin_monitor(true);
+//    update_admin_monitor(true);
 
     dialing_tone(OFF);
 
@@ -336,7 +335,7 @@ void loop() {
             AudioMemoryUsageMaxReset();
 
             // Important mode change, update admin monitor
-            update_admin_monitor(true);
+            // update_admin_monitor(true);
         } else {
             // error();
             delay(3000);
@@ -422,7 +421,7 @@ void loop() {
             start_recording();
 
             // Important mode change, update admin monitor
-            update_admin_monitor(true);
+            // update_admin_monitor(true);
         }
         break;
 
@@ -435,7 +434,7 @@ void loop() {
             mode = READY;
 
             // Important mode change, update admin monitor
-            update_admin_monitor(true);
+            // update_admin_monitor(true);
 
             #if DEBUG
                 print_mode();
@@ -459,7 +458,7 @@ void loop() {
             dialing_tone(ON);
 
             // Important mode change, update admin monitor
-            update_admin_monitor(true);
+            // update_admin_monitor(true);
         } else {
             // Check for coming near to end of max recording, sound a beep 'n' seconds before the end
             if (recording_timer > (max_recording_time - max_recording_time_warning)) {
@@ -497,7 +496,7 @@ void loop() {
     // }
 
     blink_led();
-    update_admin_monitor(false);
+    // update_admin_monitor(false);
 }
 
 /**
@@ -764,32 +763,32 @@ static void blink_led(void) {
  * @param mode_changed Force a message to the admin monitor if there has been
  * an important mode change.
  */
-static void update_admin_monitor(bool mode_changed) {
-    static unsigned long previousMillis;
-    unsigned long timeNow = millis();
+// static void update_admin_monitor(bool mode_changed) {
+//     static unsigned long previousMillis;
+//     unsigned long timeNow = millis();
 
-    if ((timeNow - previousMillis >= UPDATE_DELAY) || (mode_changed == true)) {
-        previousMillis = timeNow;
+//     if ((timeNow - previousMillis >= UPDATE_DELAY) || (mode_changed == true)) {
+//         previousMillis = timeNow;
 
-        for (size_t i = 0; i < sizeof sync_header; i++) {
-            ESP32SERIAL.write(sync_header[i]);
-        }
+//         for (size_t i = 0; i < sizeof sync_header; i++) {
+//             ESP32SERIAL.write(sync_header[i]);
+//         }
 
-        audio_guestbook_data.mode = mode;
-        audio_guestbook_data.recordings = number_of_recordings;
+//         audio_guestbook_data.mode = mode;
+//         audio_guestbook_data.recordings = number_of_recordings;
         
-        ESP32SERIAL.write(sizeof audio_guestbook_data);     // number of bytes in the structure
+//         ESP32SERIAL.write(sizeof audio_guestbook_data);     // number of bytes in the structure
         
-        #if DEBUG
-            Serial.println("Sending data do Admin Monitor Application: "); // debug
-            Serial.print("    Mode: "); Serial.println(audio_guestbook_data.mode);
-            Serial.print("    Recordings: "); Serial.println(audio_guestbook_data.recordings);
-            Serial.print("    Disk Remaining: "); Serial.println(audio_guestbook_data.disk_remaining);
-        #endif
+//         #if DEBUG
+//             Serial.println("Sending data do Admin Monitor Application: "); // debug
+//             Serial.print("    Mode: "); Serial.println(audio_guestbook_data.mode);
+//             Serial.print("    Recordings: "); Serial.println(audio_guestbook_data.recordings);
+//             Serial.print("    Disk Remaining: "); Serial.println(audio_guestbook_data.disk_remaining);
+//         #endif
 
-        ESP32SERIAL.write((byte*)&audio_guestbook_data, sizeof audio_guestbook_data);
-    }
-}
+//         ESP32SERIAL.write((byte*)&audio_guestbook_data, sizeof audio_guestbook_data);
+//     }
+// }
 
 /**
  * @brief Get the time from RTC (if available).
@@ -814,6 +813,12 @@ static void get_number_of_recordings(void) {
             break;
         }
     }
+
+    #if DEBUG
+        Serial.print("Number of recordings: '");
+        Serial.print(number_of_recordings);
+        Serial.println("'");
+    #endif    
 }
 
 // NEED TO HANDLE ERROR - SET MODE - TODO
