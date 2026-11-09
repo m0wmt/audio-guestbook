@@ -3,6 +3,9 @@ Audio guestbook for an upcoming wedding.  Let guests leave a message so the brid
 
 This project is an update (VSCode + PlatformIO VS Arduino IDE) of the audio guestbook project by [Playful Technology](https://github.com/playfultechnology/audio-guestbook).
 
+## Update: 9/11/2026
+Was used at the wedding it was designed for and was a great success with over 100 recordings. There were no software issues, in total was on for over 24 hours (was on on different days to capture the whole long weekend) with no problems.  This code has now been saved as v1.  A new request has come in to be able to randomly play a recording along with being able to use the phone to still record messages at parties etc., this will be v2.  My plan is to use the 'press' button on the phone to switch between modes (record/play), user request is that it defaults to player mode when it is switched on.
+
 ## Technical 
 
 ### Code Editor
