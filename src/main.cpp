@@ -63,7 +63,7 @@
 #include <Entropy.h>
 
 /* Defines */
-#define DEBUG true       // To print to serial output or not, true == print
+#define DEBUG false       // To print to serial output or not, true == print
 
 // Use Teensy 4.1 SD card instead of the audio boards SD card interface.
 #define SDCARD_CS_PIN BUILTIN_SDCARD
